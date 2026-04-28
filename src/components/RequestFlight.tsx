@@ -22,17 +22,17 @@ export function RequestFlight({ onConfirm, onBack }: RequestFlightProps) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="flex flex-col h-full h-dvh p-6 pb-12 w-full max-w-md mx-auto justify-end relative z-10"
+      className="flex flex-col h-full h-dvh p-6 pb-12 w-full max-w-md mx-auto justify-end relative z-10 pointer-events-none"
     >
       <div 
-        className="absolute top-12 left-6 w-12 h-12 rounded-full glass-panel flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-md"
+        className="absolute top-12 left-6 w-12 h-12 rounded-full glass-panel flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-md pointer-events-auto"
         onClick={onBack}
       >
         <ChevronRight className="w-6 h-6 text-gray-800 rotate-180" />
       </div>
 
       {/* Main Card */}
-      <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-6 mt-auto border border-gray-100">
+      <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-6 mt-auto border border-gray-100 pointer-events-auto shadow-2xl">
         
         {/* Route */}
         <div className="flex flex-col gap-4 relative">

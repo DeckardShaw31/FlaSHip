@@ -11,11 +11,11 @@ export function Dashboard({ onRequestFlight }: DashboardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="flex flex-col h-full h-dvh p-6 pb-12 w-full max-w-md mx-auto justify-between relative z-10"
+      className="flex flex-col h-full h-dvh p-6 pb-12 w-full max-w-md mx-auto justify-between relative z-10 pointer-events-none"
     >
       {/* Header & Logo */}
-      <div className="flex flex-col gap-4 mt-4">
-        <div className="flex items-center gap-2 justify-center">
+      <div className="flex flex-col gap-4 mt-4 pointer-events-auto w-fit self-center">
+        <div className="flex items-center gap-2 justify-center bg-white/80 backdrop-blur-md px-6 py-3 rounded-full shadow-lg">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-red">
             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
             <path d="M10 9l-4 2l2 4l3 -1v-6z" fill="currentColor" stroke="none" />
@@ -29,7 +29,7 @@ export function Dashboard({ onRequestFlight }: DashboardProps) {
         </div>
 
         {/* Search Bar */}
-        <div className="glass-panel rounded-full p-4 flex items-center gap-3 shadow-sm border-gray-100 mt-2">
+        <div className="glass-panel rounded-full p-4 flex items-center gap-3 shadow-sm border-gray-100 mt-2 bg-white/80 backdrop-blur-md">
           <Search className="w-5 h-5 text-gray-400" />
           <input 
             type="text" 
@@ -69,7 +69,7 @@ export function Dashboard({ onRequestFlight }: DashboardProps) {
       </div>
 
       {/* Quick Action - Bottom */}
-      <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-4 items-center">
+      <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-4 items-center pointer-events-auto shadow-2xl">
         <div className="flex justify-between w-full mb-2">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-brand-red-light flex items-center justify-center">

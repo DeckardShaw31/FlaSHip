@@ -39,15 +39,15 @@ export function LiveTracking({ onDroneLanded }: LiveTrackingProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="flex flex-col h-full h-dvh p-6 pb-12 w-full max-w-md mx-auto relative z-10"
+      className="flex flex-col h-full h-dvh p-6 pb-12 w-full max-w-md mx-auto relative z-10 pointer-events-none"
     >
-      <div className="absolute top-12 left-1/2 -translate-x-1/2 glass-panel shadow-md rounded-full px-6 py-2 flex items-center gap-2 border border-gray-100">
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 glass-panel shadow-md rounded-full px-6 py-2 flex items-center gap-2 border border-gray-100 pointer-events-auto">
         <ShieldCheck className="w-5 h-5 text-brand-red" />
         <span className="text-sm font-bold tracking-wide text-gray-800">SECURE FLIGHT</span>
       </div>
 
       <div className="flex-1 flex flex-col justify-end pb-8">
-        <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-6 shadow-xl shadow-gray-200/50 border border-gray-100">
+        <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-6 shadow-xl shadow-gray-200/50 border border-gray-100 pointer-events-auto">
           <div className="flex justify-between items-end">
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Status</p>

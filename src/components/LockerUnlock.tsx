@@ -18,9 +18,9 @@ export function LockerUnlock({ onRestart }: LockerUnlockProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
-      className="flex flex-col h-full h-dvh p-6 w-full max-w-md mx-auto items-center justify-center relative z-10"
+      className="flex flex-col h-full h-dvh p-6 w-full max-w-md mx-auto items-center justify-center relative z-10 pointer-events-none"
     >
-      <div className="glass-panel p-8 rounded-[40px] flex flex-col items-center text-center w-full relative overflow-hidden shadow-2xl border border-gray-100">
+      <div className="glass-panel p-8 rounded-[40px] flex flex-col items-center text-center w-full relative overflow-hidden shadow-2xl border border-gray-100 pointer-events-auto">
         {/* Soft glow behind icon */}
         {unlocked && (
           <motion.div 

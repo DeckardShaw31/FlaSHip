@@ -1,0 +1,6 @@
+{
+  "name": "FlaSHip Drone Delivery",
+  "description": "MVP for FlaSHip drone delivery showing the flight and unlock flow.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

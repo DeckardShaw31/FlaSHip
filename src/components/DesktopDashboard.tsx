@@ -15,23 +15,30 @@ export function DesktopDashboard() {
   return (
     <div className="flex w-full h-full bg-gray-50 text-gray-800 font-sans overflow-hidden">
       
-      {/* Sidebar */}
-      <div className="w-[80px] bg-white border-r border-gray-200 flex flex-col items-center py-6 shrink-0 z-20 shadow-sm relative">
-        <div className="w-12 h-12 rounded-xl bg-brand-red flex items-center justify-center mb-10 shadow-lg shadow-brand-red/20">
+      {/* Bottom Nav / Left Sidebar */}
+      <div className="fixed bottom-0 left-0 w-full md:relative md:w-[80px] bg-white border-t md:border-t-0 md:border-r border-gray-200 flex flex-row md:flex-col items-center justify-around md:justify-start py-4 md:py-6 shrink-0 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] md:shadow-sm">
+        <div className="hidden md:flex w-12 h-12 rounded-xl bg-brand-red items-center justify-center mb-10 shadow-lg shadow-brand-red/20">
           <Package className="w-6 h-6 text-white" />
         </div>
         
-        <div className="flex flex-col gap-8 flex-1 w-full items-center">
-          <button className="p-3 rounded-xl bg-gray-50 text-brand-red transition-colors relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-red rounded-r-full" />
+        <div className="flex flex-row md:flex-col gap-2 md:gap-8 flex-1 w-full justify-center md:justify-start items-center">
+          <button className="p-3 rounded-xl bg-gray-50 text-brand-red transition-colors relative flex-1 md:flex-none flex justify-center">
+            <div className="absolute top-0 md:left-0 md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-x-0 md:-translate-y-1/2 w-8 md:w-1 h-1 md:h-6 bg-brand-red rounded-b-full md:rounded-b-none md:rounded-r-full" />
             <MapIcon className="w-6 h-6" />
           </button>
-          <button className="p-3 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-brand-red transition-colors">
+          <button className="p-3 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-brand-red transition-colors flex-1 md:flex-none flex justify-center">
             <Clock className="w-6 h-6" />
+          </button>
+          
+          <button className="md:hidden p-3 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-brand-red transition-colors flex-1 flex justify-center" onClick={() => document.getElementById('mobile-drawer')?.classList.toggle('translate-y-[120%]')}>
+            <span className="sr-only">Toggle drawer</span>
+            <div className="w-1.5 h-1.5 bg-current rounded-full" />
+            <div className="w-1.5 h-1.5 bg-current rounded-full ml-1" />
+            <div className="w-1.5 h-1.5 bg-current rounded-full ml-1" />
           </button>
         </div>
 
-        <div className="w-12 h-12 rounded-full border-2 border-brand-red/30 flex items-center justify-center bg-white p-1">
+        <div className="hidden md:flex w-12 h-12 rounded-full border-2 border-brand-red/30 items-center justify-center bg-white p-1">
           <div className="w-full h-full rounded-full bg-brand-red-light flex items-center justify-center">
              <div className="w-2.5 h-2.5 rounded-full bg-brand-red" />
           </div>
@@ -67,21 +74,21 @@ export function DesktopDashboard() {
         </div>
 
         {/* Top Header */}
-        <div className="h-20 px-8 flex items-center gap-6 z-10 pointer-events-none">
+        <div className="h-20 px-4 md:px-8 mt-4 md:mt-0 flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 z-10 pointer-events-none">
           <div className="flex items-center gap-2">
             <DroneLogo className="w-8 h-8 text-brand-red" />
             <h1 className="text-2xl font-bold text-brand-red tracking-tight">FlaSHip</h1>
           </div>
           
-          <div className="flex items-center gap-3 ml-4 pointer-events-auto">
-            <div className="px-3 py-1 rounded-full border border-green-500/30 bg-green-50 text-green-600 text-xs font-bold tracking-wider">
+          <div className="flex items-center gap-2 md:gap-3 ml-auto md:ml-4 pointer-events-auto">
+            <div className="hidden md:flex px-3 py-1 rounded-full border border-green-500/30 bg-green-50 text-green-600 text-xs font-bold tracking-wider">
               SYSTEM LIVE
             </div>
-            <div className="px-4 py-1.5 rounded-full bg-white border border-gray-200 flex items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
+            <div className="px-3 md:px-4 py-1.5 rounded-full bg-white border border-gray-200 flex items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               D-742 Active
             </div>
-            <div className="px-4 py-1.5 rounded-full bg-white border border-gray-200 flex items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
+            <div className="hidden md:flex px-4 py-1.5 rounded-full bg-white border border-gray-200 items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
               <Signal className="w-3.5 h-3.5 text-blue-500" />
               98% Signal
             </div>
@@ -93,7 +100,7 @@ export function DesktopDashboard() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="mt-8 ml-8 w-[320px] bg-white/90 backdrop-blur-md rounded-3xl border border-gray-100 p-6 z-10 shadow-xl pointer-events-auto"
+            className="mt-4 md:mt-8 mx-4 md:ml-8 w-[calc(100%-2rem)] md:w-[320px] bg-white/90 backdrop-blur-md rounded-3xl border border-gray-100 p-5 md:p-6 z-10 shadow-xl pointer-events-auto"
           >
             <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">Delivery Info</h3>
             
@@ -111,7 +118,7 @@ export function DesktopDashboard() {
         )}
 
         {/* Bottom Interactive Area */}
-        <div className="absolute bottom-8 w-full flex justify-center z-20 pointer-events-none">
+        <div className="absolute bottom-[90px] md:bottom-8 w-full flex justify-center z-20 pointer-events-none">
           <AnimatePresence mode="wait">
             
             {phase === "DASHBOARD" && (
@@ -264,8 +271,17 @@ export function DesktopDashboard() {
 
       </div>
 
-      {/* Right Sidebar */}
-      <div className="hidden lg:flex w-[350px] bg-white border-l border-gray-200 p-8 flex-col gap-10 shrink-0 z-20 shadow-sm overflow-y-auto relative">
+      {/* Right Sidebar / Mobile Drawer */}
+      <div 
+        id="mobile-drawer"
+        className="fixed md:relative inset-x-0 bottom-[80px] md:bottom-0 translate-y-[120%] md:translate-y-0 transition-transform duration-300 w-full md:w-[350px] bg-white border-t md:border-t-0 md:border-l border-gray-200 p-6 md:p-8 flex flex-col gap-6 md:gap-10 shrink-0 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-sm overflow-y-auto max-h-[70vh] md:max-h-full rounded-t-[32px] md:rounded-none"
+      >
+        <button 
+          className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto md:hidden mb-2 shrink-0 active:bg-gray-300"
+          onClick={() => document.getElementById('mobile-drawer')?.classList.add('translate-y-[120%]')}
+        >
+          <span className="sr-only">Close drawer</span>
+        </button>
         
         {/* Hardware Status */}
         <div>
@@ -291,7 +307,35 @@ export function DesktopDashboard() {
           </div>
         </div>
 
+        {/* Flight History */}
+        {phase === "DASHBOARD" && (
+          <div>
+            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">Flight History</h3>
+            <div className="flex flex-col gap-3">
+              <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">#FL-8812</p>
+                  <p className="text-xs text-gray-500 font-medium mt-1">Today, 10:45 AM</p>
+                </div>
+                <div className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                  Delivered
+                </div>
+              </div>
+              <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">#FL-8805</p>
+                  <p className="text-xs text-gray-500 font-medium mt-1">Yesterday</p>
+                </div>
+                <div className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                  Delivered
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Locker Live Feed */}
+        {(phase === "TRACKING" || phase === "DELIVERED") && (
         <div>
            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">Locker Live Feed</h3>
            
@@ -314,6 +358,7 @@ export function DesktopDashboard() {
              {phase === "DELIVERED" ? "Package securely stored. Waiting for user unlock." : "Secure compartment ready for docking. Smart release sensor engaged."}
            </p>
         </div>
+        )}
 
         <div className="mt-auto">
           <div className="bg-brand-red-light/30 border border-brand-red/10 rounded-2xl p-5">

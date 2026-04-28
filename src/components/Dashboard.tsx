@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { Navigation, Package, Search } from "lucide-react";
+import { DroneLogo } from "./DroneLogo";
 
 interface DashboardProps {
   onRequestFlight: () => void;
@@ -16,15 +17,7 @@ export function Dashboard({ onRequestFlight }: DashboardProps) {
       {/* Header & Logo */}
       <div className="flex flex-col gap-4 mt-4 pointer-events-auto w-fit self-center">
         <div className="flex items-center gap-2 justify-center bg-white/80 backdrop-blur-md px-6 py-3 rounded-full shadow-lg">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-red">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-            <path d="M10 9l-4 2l2 4l3 -1v-6z" fill="currentColor" stroke="none" />
-            <path d="M14 9l4 2l-2 4l-3 -1v-6z" fill="currentColor" stroke="none" />
-            <path d="M12 14v4" />
-            <path d="M10 18h4" />
-            <path d="M4 8l16 0" />
-            <path d="M12 4v4" />
-          </svg>
+          <DroneLogo className="w-10 h-10 text-brand-red" />
           <span className="text-3xl font-bold text-brand-red tracking-tight">FlaSHip</span>
         </div>
 

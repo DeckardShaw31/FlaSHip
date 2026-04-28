@@ -5,6 +5,7 @@ import {
   Eye, Unlock, HeadphonesIcon, Navigation2, Check, QrCode
 } from "lucide-react";
 import { InteractiveMap } from "./InteractiveMap";
+import { DroneLogo } from "./DroneLogo";
 
 type AppPhase = "DASHBOARD" | "REQUEST" | "TRACKING" | "DELIVERED";
 
@@ -68,15 +69,7 @@ export function DesktopDashboard() {
         {/* Top Header */}
         <div className="h-20 px-8 flex items-center gap-6 z-10 pointer-events-none">
           <div className="flex items-center gap-2">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-red">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-              <path d="M10 9l-4 2l2 4l3 -1v-6z" fill="currentColor" stroke="none" />
-              <path d="M14 9l4 2l-2 4l-3 -1v-6z" fill="currentColor" stroke="none" />
-              <path d="M12 14v4" />
-              <path d="M10 18h4" />
-              <path d="M4 8l16 0" />
-              <path d="M12 4v4" />
-            </svg>
+            <DroneLogo className="w-8 h-8 text-brand-red" />
             <h1 className="text-2xl font-bold text-brand-red tracking-tight">FlaSHip</h1>
           </div>
           

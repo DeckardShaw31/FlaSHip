@@ -2,11 +2,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-cyan: #06b6d4;
-  --color-brand-indigo: #6366f1;
-  --color-dark-space: #0f172a;
-  --color-glass-surface: rgba(30, 41, 59, 0.7);
-  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-brand-red: #E31837;
+  --color-brand-red-light: #FCE8EB;
+  --color-brand-red-dark: #C81D22;
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -14,18 +12,16 @@ body, html {
   margin: 0;
   padding: 0;
   height: 100%;
-  background-color: var(--color-dark-space);
-  color: white;
+  background-color: #F9FAFB;
+  color: #111827;
   overflow: hidden; /* Lock scroll for app feel */
 }
 
-/* Glass panel utility */
+/* Glass panel utility for light mode */
 @layer utilities {
   .glass-panel {
-    background: var(--color-glass-surface);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--color-glass-border);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
   }
 }

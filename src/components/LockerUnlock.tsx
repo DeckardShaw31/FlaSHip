@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Unlock, Check, Box, QrCode } from "lucide-react";
-import { cn } from "../lib/utils";
 
 interface LockerUnlockProps {
   onRestart: () => void;
@@ -21,65 +20,62 @@ export function LockerUnlock({ onRestart }: LockerUnlockProps) {
       exit={{ opacity: 0 }}
       className="flex flex-col h-full h-dvh p-6 w-full max-w-md mx-auto items-center justify-center relative z-10"
     >
-      <div className="glass-panel p-8 rounded-[40px] flex flex-col items-center text-center w-full relative overflow-hidden">
-        {/* Confetti or glow back */}
+      <div className="glass-panel p-8 rounded-[40px] flex flex-col items-center text-center w-full relative overflow-hidden shadow-2xl border border-gray-100">
+        {/* Soft glow behind icon */}
         {unlocked && (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="absolute inset-0 bg-brand-cyan/20 blur-3xl -z-10" 
+            className="absolute inset-0 bg-green-50 z-0" 
           />
         )}
 
-        <div className="mb-6 relative">
-          <div className="w-24 h-24 rounded-full bg-brand-indigo/20 flex flex-col items-center justify-center border border-brand-indigo/30 shadow-[0_0_40px_rgba(99,102,241,0.2)]">
+        <div className="mb-6 relative z-10 mt-4">
+          <div className={`w-28 h-28 rounded-full flex flex-col items-center justify-center transition-colors duration-500 shadow-xl ${unlocked ? 'bg-green-100 shadow-green-200/50' : 'bg-brand-red-light shadow-brand-red/20'}`}>
             <AnimatePresence mode="popLayout">
               {!unlocked ? (
                 <motion.div key="locked" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <Box className="w-10 h-10 text-brand-indigo mb-1" />
+                  <Box className="w-12 h-12 text-brand-red mb-1" />
                 </motion.div>
               ) : (
-                <motion.div key="unlocked" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <Check className="w-12 h-12 text-brand-cyan" />
+                <motion.div key="unlocked" initial={{ scale: 0, rotate: -45 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}>
+                  <Check className="w-14 h-14 text-green-600" strokeWidth={3} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-white mb-2">
+        <h2 className="text-3xl font-bold text-gray-900 mb-3 relative z-10 tracking-tight">
           {unlocked ? "Locker Unlocked!" : "Package Arrived"}
         </h2>
-        <p className="text-gray-400 text-sm mb-8 px-4 leading-relaxed">
+        <p className="text-gray-500 text-base font-medium mb-10 px-2 leading-relaxed relative z-10">
           {unlocked 
-            ? "Locker #402 is now open. Retrieve your package and close the door." 
-            : "Your drone has safely deposited the item into Locker #402. Tap below or scan QR to unlock."}
+            ? "Locker #402 is now open. Retrieve your package and securely push the door closed." 
+            : "Your drone has safely deposited the item into Locker #402. Tap below to retrieve it."}
         </p>
 
         {!unlocked ? (
-          <div className="flex flex-col w-full gap-4">
+          <div className="flex flex-col w-full gap-4 relative z-10 mb-2">
             <button 
               onClick={handleUnlock}
-              className="w-full bg-gradient-to-r relative group from-brand-indigo to-brand-cyan text-white rounded-full py-4 font-semibold text-lg shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] transition-all overflow-hidden"
+              className="w-full bg-brand-red text-white rounded-full py-5 font-bold text-lg hover:bg-brand-red-dark transition-all shadow-xl shadow-brand-red/30 flex items-center justify-center gap-3 active:scale-95"
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform rounded-full" />
-              <div className="flex items-center justify-center gap-2 relative z-10">
-                <Unlock className="w-5 h-5" />
-                Unlock Locker
-              </div>
+              <Unlock className="w-6 h-6" />
+              Unlock Locker Now
             </button>
-            <button className="w-full bg-transparent border border-gray-600 text-white rounded-full py-4 font-semibold text-sm hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
-              <QrCode className="w-4 h-4" />
-              Show QR Code
+            <button className="w-full bg-white border-2 border-gray-200 text-gray-600 rounded-full py-4 font-bold text-sm hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center justify-center gap-2">
+              <QrCode className="w-5 h-5" />
+              Show Pickup QR Code
             </button>
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full relative z-10 mb-2 mt-[20px]">
             <button 
               onClick={onRestart}
-              className="w-full glass-panel text-white rounded-full py-4 font-semibold hover:bg-white/10 transition-colors border border-white/20"
+              className="w-full bg-gray-900 text-white rounded-full py-5 font-bold text-lg hover:bg-gray-800 transition-all shadow-lg active:scale-95"
             >
-              Done
+              Done & Return
             </button>
           </motion.div>
         )}
@@ -87,3 +83,4 @@ export function LockerUnlock({ onRestart }: LockerUnlockProps) {
     </motion.div>
   );
 }
+

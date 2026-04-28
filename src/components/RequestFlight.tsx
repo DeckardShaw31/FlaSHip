@@ -25,43 +25,43 @@ export function RequestFlight({ onConfirm, onBack }: RequestFlightProps) {
       className="flex flex-col h-full h-dvh p-6 pb-12 w-full max-w-md mx-auto justify-end relative z-10"
     >
       <div 
-        className="absolute top-12 left-6 w-10 h-10 rounded-full glass-panel flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+        className="absolute top-12 left-6 w-12 h-12 rounded-full glass-panel flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-md"
         onClick={onBack}
       >
-        <ChevronRight className="w-5 h-5 text-white rotate-180" />
+        <ChevronRight className="w-6 h-6 text-gray-800 rotate-180" />
       </div>
 
       {/* Main Card */}
-      <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-6 mt-auto">
+      <div className="glass-panel p-6 rounded-[32px] flex flex-col gap-6 mt-auto border border-gray-100">
         
         {/* Route */}
         <div className="flex flex-col gap-4 relative">
-          <div className="absolute left-[15px] top-[24px] bottom-[24px] w-[2px] bg-gray-700/50" />
+          <div className="absolute left-[15px] top-[24px] bottom-[24px] w-[2px] bg-gray-200" />
           
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center border border-gray-600">
-              <MapPin className="w-4 h-4 text-gray-300" />
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+              <MapPin className="w-4 h-4 text-gray-500" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-gray-400">PICKUP PORT</p>
-              <p className="font-medium text-white truncate w-48">142 SkyHub Station, Block A</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pickup Port</p>
+              <p className="font-bold text-gray-900 truncate w-48 text-base">142 SkyHub Station</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-8 h-8 rounded-full bg-brand-cyan/20 flex items-center justify-center border border-brand-cyan/50">
-              <div className="w-2 h-2 rounded-full bg-brand-cyan" />
+            <div className="w-8 h-8 rounded-full bg-brand-red-light flex items-center justify-center border border-brand-red/30">
+              <div className="w-2.5 h-2.5 rounded-full bg-brand-red" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-brand-cyan">DROP-OFF LOCKER</p>
-              <p className="font-medium text-white truncate w-48">Locker #402, Metro Square</p>
+              <p className="text-xs font-semibold text-brand-red uppercase tracking-wider">Drop-off Locker</p>
+              <p className="font-bold text-gray-900 truncate w-48 text-base">Locker #402, Metro</p>
             </div>
           </div>
         </div>
 
         {/* Item Size */}
-        <div>
-          <p className="text-sm font-medium text-gray-300 mb-3">Item Size</p>
+        <div className="pt-2 border-t border-gray-100">
+          <p className="text-sm font-bold text-gray-800 mb-3 block">Package Size</p>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {ITEMS.map((item) => {
               const isSelected = selectedItem === item.id;
@@ -70,13 +70,13 @@ export function RequestFlight({ onConfirm, onBack }: RequestFlightProps) {
                   key={item.id}
                   onClick={() => setSelectedItem(item.id)}
                   className={cn(
-                    "flex-none flex flex-col items-center justify-center w-24 h-24 rounded-2xl glass-panel border transition-colors",
-                    isSelected ? "border-brand-indigo bg-brand-indigo/20" : "border-glass-border hover:bg-white/5"
+                    "flex-none flex flex-col items-center justify-center w-24 h-24 rounded-2xl border transition-all duration-200",
+                    isSelected ? "border-brand-red bg-brand-red-light shadow-md" : "border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm"
                   )}
                 >
-                  <item.icon className={cn("w-6 h-6 mb-2", isSelected ? "text-brand-indigo" : "text-gray-400")} />
-                  <span className="text-xs font-semibold">{item.name}</span>
-                  <span className="text-[10px] text-gray-400">{item.weight}</span>
+                  <item.icon className={cn("w-6 h-6 mb-2", isSelected ? "text-brand-red" : "text-gray-400")} />
+                  <span className={cn("text-xs font-bold", isSelected ? "text-brand-red" : "text-gray-700")}>{item.name}</span>
+                  <span className={cn("text-[10px]", isSelected ? "text-brand-red/70" : "text-gray-400")}>{item.weight}</span>
                 </button>
               );
             })}
@@ -84,16 +84,16 @@ export function RequestFlight({ onConfirm, onBack }: RequestFlightProps) {
         </div>
 
         {/* Summary Card */}
-        <div className="glass-panel p-4 rounded-2xl flex justify-between items-center bg-black/20">
+        <div className="bg-gray-50 p-4 rounded-2xl flex justify-between items-center border border-gray-100 shadow-inner">
           <div className="flex items-center gap-3">
-            <CreditCard className="w-5 h-5 text-gray-400" />
+            <CreditCard className="w-5 h-5 text-gray-500" />
             <div>
-              <p className="text-sm font-semibold">SkyPay ***42</p>
+              <p className="text-sm font-bold text-gray-800">SkyPay ***42</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-lg font-bold text-brand-cyan">$4.50</p>
-            <p className="text-xs text-gray-400 flex items-center justify-end gap-1">
+            <p className="text-xl font-bold text-gray-900">$4.50</p>
+            <p className="text-xs font-semibold text-brand-red flex items-center justify-end gap-1">
               <Clock className="w-3 h-3" /> 12 mins
             </p>
           </div>
@@ -101,7 +101,7 @@ export function RequestFlight({ onConfirm, onBack }: RequestFlightProps) {
 
         <button 
           onClick={onConfirm}
-          className="w-full bg-gradient-to-r from-brand-indigo to-brand-cyan text-white rounded-full py-4 font-semibold text-lg shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] transition-shadow active:scale-[0.98]"
+          className="w-full bg-brand-red text-white rounded-full py-4 font-bold text-lg hover:bg-brand-red-dark transition-all active:scale-[0.98] shadow-lg shadow-brand-red/30"
         >
           Confirm Flight
         </button>
@@ -109,3 +109,4 @@ export function RequestFlight({ onConfirm, onBack }: RequestFlightProps) {
     </motion.div>
   );
 }
+

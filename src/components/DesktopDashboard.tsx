@@ -265,7 +265,7 @@ export function DesktopDashboard({
       <div className="flex-1 flex flex-col relative z-0 w-full overflow-hidden">
         {/* Map Background grid */}
         <div className="absolute inset-0 z-0 bg-[#F3F4F6]">
-          <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} deliveryLocation={deliveryLocation} />
+          <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} deliveryLocation={deliveryLocation} onSelectLocation={setDeliveryLocation} />
           {/* Light Grid Overlay for separation */}
           <div
             className="absolute inset-0 opacity-40 pointer-events-none"
@@ -367,17 +367,13 @@ export function DesktopDashboard({
                 </div>
 
                 <div className="w-full md:w-64 shrink-0">
-                  <div className="relative">
-                    <select
-                      value={deliveryLocation}
-                      onChange={(e) => setDeliveryLocation(e.target.value)}
-                      className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-2xl py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors"
-                    >
-                      <option value="Smart Locker S-04">Recommended: Smart Locker S-04 (0.2km)</option>
-                      <option value="District 1 Balcony">District 1 Balcony (0.5km)</option>
-                      <option value="Skyway Station A">Skyway Station A (1.2km)</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-center">
+                    <p className="text-xs text-gray-500 font-bold uppercase mb-0.5">Delivery To</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {deliveryLocation === "Smart Locker S-04" ? "Smart Locker S-04 (0.2km)" : 
+                       deliveryLocation === "District 1 Balcony" ? "District 1 Balcony (0.5km)" : 
+                       deliveryLocation === "Skyway Station A" ? "Skyway Station A (1.2km)" : deliveryLocation}
+                    </p>
                   </div>
                 </div>
 

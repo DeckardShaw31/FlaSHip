@@ -141,12 +141,19 @@ interface InteractiveMapProps {
   phase?: string;
   etaSeconds?: number;
   deliveryLocation?: string;
+  onSelectLocation?: (location: string) => void;
 }
 
-export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation }: InteractiveMapProps) {
+const AVAILABLE_LOCATIONS = [
+  { name: "Smart Locker S-04", coords: [10.7820, 106.7050] as [number, number] },
+  { name: "District 1 Balcony", coords: [10.7800, 106.7020] as [number, number] },
+  { name: "Skyway Station A", coords: [10.7850, 106.7100] as [number, number] },
+];
+
+export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation, onSelectLocation }: InteractiveMapProps) {
   let activeDestination: [number, number] = DESTINATION;
-  if (deliveryLocation === "District 1 Balcony") activeDestination = [10.7800, 106.7020];
-  else if (deliveryLocation === "Skyway Station A") activeDestination = [10.7850, 106.7100];
+  const selectedLoc = AVAILABLE_LOCATIONS.find(l => l.name === deliveryLocation);
+  if (selectedLoc) activeDestination = selectedLoc.coords;
 
   return (
     <div className="absolute inset-0 w-full h-full -z-10 bg-[#F3F4F6]">
@@ -166,10 +173,24 @@ export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation }
         <Marker position={HCM_CENTER}>
           <Popup>142 SkyHub Station</Popup>
         </Marker>
-        {/* Delivery Locker */}
-        <Marker position={activeDestination}>
-          <Popup>{deliveryLocation || 'Locker #402, Metro'}</Popup>
-        </Marker>
+        {/* Delivery Lockers */}
+        {phase !== "TRACKING" ? (
+          AVAILABLE_LOCATIONS.map(loc => (
+            <Marker 
+              key={loc.name} 
+              position={loc.coords} 
+              eventHandlers={{
+                click: () => onSelectLocation?.(loc.name)
+              }}
+            >
+              <Popup>{loc.name} {deliveryLocation === loc.name && "(Selected)"}</Popup>
+            </Marker>
+          ))
+        ) : (
+          <Marker position={activeDestination}>
+            <Popup>{deliveryLocation || 'Locker #402, Metro'}</Popup>
+          </Marker>
+        )}
         
         {/* Example area circle */}
         <Circle center={HCM_CENTER} pathOptions={{ fillColor: 'var(--color-brand-red, #E60000)', color: 'var(--color-brand-red, #E60000)' }} radius={800} fillOpacity={0.05} weight={2} />

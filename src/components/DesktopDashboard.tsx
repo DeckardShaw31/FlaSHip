@@ -2,16 +2,51 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Package, Map as MapIcon, Clock, Signal, Battery, 
-  Eye, Unlock, HeadphonesIcon, Navigation2, Check, QrCode, ChevronDown
+  Eye, Unlock, HeadphonesIcon, Navigation2, Check, QrCode, ChevronDown, User as UserIcon, LogOut, Loader2
 } from "lucide-react";
 import { InteractiveMap } from "./InteractiveMap";
 import { DroneLogo } from "./DroneLogo";
+import { User } from "../App";
+import { supabase } from "../lib/supabase";
 
 type AppPhase = "DASHBOARD" | "REQUEST" | "TRACKING" | "DELIVERED";
 
-export function DesktopDashboard() {
+export function DesktopDashboard({ user, onLogout }: { user: User, onLogout: () => void }) {
   const [phase, setPhase] = useState<AppPhase>("DASHBOARD");
   const [expandedHistory, setExpandedHistory] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"MAP" | "HISTORY" | "PROFILE">("MAP");
+  const [trackingId, setTrackingId] = useState<string | null>(null);
+  const [deliveryLocation, setDeliveryLocation] = useState("Smart Locker S-04");
+  const [contactPrefs, setContactPrefs] = useState("SMS & Push");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  useEffect(() => {
+    supabase.from('profiles').select('delivery_location, contact_prefs').eq('id', user.id).single()
+      .then(({data, error}) => {
+         if (data) {
+           if (data.delivery_location) setDeliveryLocation(data.delivery_location);
+           if (data.contact_prefs) setContactPrefs(data.contact_prefs);
+         }
+      })
+  }, [user.id])
+
+  const handleProfileChange = async (location: string, prefs: string) => {
+    setDeliveryLocation(location);
+    setContactPrefs(prefs);
+    setIsSavingProfile(true);
+    try {
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        delivery_location: location,
+        contact_prefs: prefs,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  }
 
   const [simulatedData, setSimulatedData] = useState({
     altitude: 78.2,
@@ -21,8 +56,8 @@ export function DesktopDashboard() {
   });
 
   const flightHistory = [
-    { id: '#FL-8812', date: 'Today, 10:45 AM', origin: '142 SkyHub Station', destination: 'Locker S-04, Metro', status: 'Delivered', weight: '1.2kg' },
-    { id: '#FL-8805', date: 'Yesterday', origin: 'Central Hub', destination: 'District 1 Balcony', status: 'Delivered', weight: '0.8kg' },
+    { id: '#FL-8812', date: 'Today, 10:45 AM', origin: '142 SkyHub Station', destination: 'Locker S-04, Metro', status: 'Delivered', weight: '1.2kg', duration: '4m 12s' },
+    { id: '#FL-8805', date: 'Yesterday', origin: 'Central Hub', destination: 'District 1 Balcony', status: 'Delivered', weight: '0.8kg', duration: '5m 30s' },
   ];
 
   useEffect(() => {
@@ -66,20 +101,33 @@ export function DesktopDashboard() {
         <div className="flex flex-row md:flex-col gap-2 md:gap-8 flex-1 w-full justify-center md:justify-start items-center">
           <button 
             type="button"
+            onClick={() => { setActiveTab("MAP"); document.getElementById('mobile-drawer')?.classList.add('translate-y-[120%]'); }}
             aria-label="Map view"
-            className="p-3 rounded-xl bg-gray-50 text-brand-red transition-colors relative flex-1 md:flex-none flex justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
+            className={`p-3 rounded-xl transition-colors relative flex-1 md:flex-none flex justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${activeTab === 'MAP' ? 'bg-gray-50 text-brand-red' : 'text-gray-400 hover:text-brand-red hover:bg-gray-50'}`}
           >
-            <div className="absolute top-0 md:left-0 md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-x-0 md:-translate-y-1/2 w-8 md:w-1 h-1 md:h-6 bg-brand-red rounded-b-full md:rounded-b-none md:rounded-r-full" />
+            {activeTab === 'MAP' && <div className="absolute top-0 md:left-0 md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-x-0 md:-translate-y-1/2 w-8 md:w-1 h-1 md:h-6 bg-brand-red rounded-b-full md:rounded-b-none md:rounded-r-full" />}
             <MapIcon className="w-6 h-6" />
           </button>
           <button 
             type="button"
+            onClick={() => { setActiveTab("HISTORY"); document.getElementById('mobile-drawer')?.classList.remove('translate-y-[120%]'); }}
             aria-label="Flight history"
-            className="p-3 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-brand-red transition-colors flex-1 md:flex-none flex justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
+            className={`p-3 rounded-xl transition-colors relative flex-1 md:flex-none flex justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${activeTab === 'HISTORY' ? 'bg-gray-50 text-brand-red' : 'text-gray-400 hover:text-brand-red hover:bg-gray-50'}`}
           >
+            {activeTab === 'HISTORY' && <div className="absolute top-0 md:left-0 md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-x-0 md:-translate-y-1/2 w-8 md:w-1 h-1 md:h-6 bg-brand-red rounded-b-full md:rounded-b-none md:rounded-r-full" />}
             <Clock className="w-6 h-6" />
           </button>
           
+          <button 
+            type="button"
+            onClick={() => { setActiveTab("PROFILE"); document.getElementById('mobile-drawer')?.classList.remove('translate-y-[120%]'); }}
+            aria-label="Profile"
+            className={`p-3 rounded-xl transition-colors relative flex-1 md:flex-none flex justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${activeTab === 'PROFILE' ? 'bg-gray-50 text-brand-red' : 'text-gray-400 hover:text-brand-red hover:bg-gray-50'}`}
+          >
+            {activeTab === 'PROFILE' && <div className="absolute top-0 md:left-0 md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-x-0 md:-translate-y-1/2 w-8 md:w-1 h-1 md:h-6 bg-brand-red rounded-b-full md:rounded-b-none md:rounded-r-full" />}
+            <UserIcon className="w-6 h-6" />
+          </button>
+
           <button 
             type="button"
             aria-label="Toggle sidebar"
@@ -106,7 +154,7 @@ export function DesktopDashboard() {
         
         {/* Map Background grid */}
         <div className="absolute inset-0 z-0 bg-[#F3F4F6]">
-           <InteractiveMap />
+           <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} />
            {/* Light Grid Overlay for separation */}
            <div 
              className="absolute inset-0 opacity-40 pointer-events-none"
@@ -162,12 +210,12 @@ export function DesktopDashboard() {
             
             <div className="mb-6">
               <p className="text-xs text-gray-400 mb-1 font-semibold uppercase">Package ID</p>
-              <p className="text-xl font-bold text-gray-900">#FL-8829-01</p>
+              <p className="text-xl font-bold text-gray-900">{trackingId || "#FL-8829-01"}</p>
             </div>
             
             <div>
               <p className="text-xs text-gray-400 mb-1 font-semibold uppercase">Destination</p>
-              <p className="text-lg font-bold text-gray-900">Smart Locker S-04</p>
+              <p className="text-lg font-bold text-gray-900">{deliveryLocation}</p>
               <p className="text-xs text-brand-red font-medium mt-1">Aviation District, Zone B</p>
             </div>
           </motion.div>
@@ -226,12 +274,15 @@ export function DesktopDashboard() {
                    </div>
                    <div className="w-full md:flex-1 bg-brand-red-light/30 p-4 rounded-2xl border border-brand-red/10">
                      <p className="text-xs text-brand-red font-semibold uppercase mb-1">Drop-off</p>
-                     <p className="text-sm md:text-base font-bold text-gray-900">Locker S-04, Metro</p>
+                     <p className="text-sm md:text-base font-bold text-gray-900">{deliveryLocation}</p>
                    </div>
                 </div>
                 <button 
                   type="button"
-                  onClick={() => setPhase("TRACKING")}
+                  onClick={() => {
+                    setTrackingId(`#FL-${Math.floor(1000 + Math.random() * 9000)}-01`);
+                    setPhase("TRACKING");
+                  }}
                   className="w-full bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 md:py-4 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
                 >
                   Pay $4.50 & Launch
@@ -306,7 +357,7 @@ export function DesktopDashboard() {
                 
                 <div className="relative z-10">
                   <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Package Arrived</h2>
-                  <p className="text-sm md:text-base text-gray-500 font-medium">Locker S-04 is ready to open.</p>
+                  <p className="text-sm md:text-base text-gray-500 font-medium">Order {trackingId || "#FL-8829-01"} at {deliveryLocation} is ready to open.</p>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-3 md:gap-4 w-full relative z-10 mt-2">
@@ -346,6 +397,7 @@ export function DesktopDashboard() {
         </button>
         
         {/* Hardware Status */}
+        {activeTab === 'MAP' && (
         <div>
           <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">Hardware Status</h3>
           
@@ -368,9 +420,10 @@ export function DesktopDashboard() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Flight History */}
-        {phase === "DASHBOARD" && (
+        {activeTab === 'HISTORY' && (
           <div>
             <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">Flight History</h3>
             <div className="flex flex-col gap-3">
@@ -406,6 +459,7 @@ export function DesktopDashboard() {
                           <div className="flex justify-between"><span className="font-semibold text-gray-400 uppercase">Origin</span> <span className="font-medium text-gray-900">{flight.origin}</span></div>
                           <div className="flex justify-between"><span className="font-semibold text-gray-400 uppercase">Destination</span> <span className="font-medium text-gray-900">{flight.destination}</span></div>
                           <div className="flex justify-between"><span className="font-semibold text-gray-400 uppercase">Weight</span> <span className="font-medium text-gray-900">{flight.weight}</span></div>
+                          <div className="flex justify-between"><span className="font-semibold text-gray-400 uppercase">Duration</span> <span className="font-medium text-gray-900">{flight.duration}</span></div>
                         </div>
                       </motion.div>
                     )}
@@ -417,7 +471,7 @@ export function DesktopDashboard() {
         )}
 
         {/* Locker Live Feed */}
-        {(phase === "TRACKING" || phase === "DELIVERED") && (
+        {activeTab === 'MAP' && (phase === "TRACKING" || phase === "DELIVERED") && (
         <div>
            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">Locker Live Feed</h3>
            
@@ -440,6 +494,80 @@ export function DesktopDashboard() {
              {phase === "DELIVERED" ? "Package securely stored. Waiting for user unlock." : "Secure compartment ready for docking. Smart release sensor engaged."}
            </p>
         </div>
+        )}
+
+        {/* Profile */}
+        {activeTab === 'PROFILE' && (
+          <div>
+            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">Your Profile</h3>
+            
+            <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 shadow-sm mb-6 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-brand-red-light rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-md">
+                <UserIcon className="w-10 h-10 text-brand-red" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+              <p className="text-sm font-medium text-gray-500 mt-1">{user.email}</p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2 relative">
+                <label className="text-xs font-bold text-gray-500 uppercase flex justify-between">
+                  Preferred Delivery Location
+                  {isSavingProfile && <Loader2 className="w-3 h-3 animate-spin text-brand-red inline" />}
+                </label>
+                <div className="relative">
+                  <select 
+                    value={deliveryLocation}
+                    onChange={(e) => handleProfileChange(e.target.value, contactPrefs)}
+                    className="w-full appearance-none bg-white border border-gray-200 text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors"
+                  >
+                    <option value="Smart Locker S-04">Smart Locker S-04</option>
+                    <option value="District 1 Balcony">District 1 Balcony</option>
+                    <option value="Central Hub S-01">Central Hub S-01</option>
+                    <option value="Skyway Station A">Skyway Station A</option>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 relative">
+                <label className="text-xs font-bold text-gray-500 uppercase flex justify-between">
+                  Contact Preferences
+                  {isSavingProfile && <Loader2 className="w-3 h-3 animate-spin text-brand-red inline" />}
+                </label>
+                <div className="relative">
+                  <select 
+                    value={contactPrefs}
+                    onChange={(e) => handleProfileChange(deliveryLocation, e.target.value)}
+                    className="w-full appearance-none bg-white border border-gray-200 text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors"
+                  >
+                    <option value="SMS & Push">SMS & Push Notification</option>
+                    <option value="Push Only">Push Notification Only</option>
+                    <option value="Email Only">Email Only</option>
+                    <option value="Do Not Disturb">Do Not Disturb</option>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              <button className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red mt-2">
+                <span className="font-semibold text-gray-700">Account Settings</span>
+                <ChevronDown className="w-5 h-5 text-gray-400 -rotate-90" />
+              </button>
+              <button className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red">
+                <span className="font-semibold text-gray-700">Payment Methods</span>
+                <ChevronDown className="w-5 h-5 text-gray-400 -rotate-90" />
+              </button>
+            </div>
+            
+            <button 
+              onClick={onLogout}
+              className="mt-8 w-full flex items-center justify-center gap-2 p-4 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+            >
+              <LogOut className="w-5 h-5" />
+              Sign Out
+            </button>
+          </div>
         )}
 
         <div className="mt-auto">

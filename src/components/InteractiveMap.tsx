@@ -1,7 +1,8 @@
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Plus, Minus, LocateFixed } from 'lucide-react';
+import { Plus, Minus, LocateFixed, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 // Fix for default marker icons in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -13,6 +14,25 @@ L.Icon.Default.mergeOptions({
 });
 
 const HCM_CENTER: [number, number] = [10.7769, 106.7009];
+const DESTINATION: [number, number] = [10.7820, 106.7050];
+
+// Custom icon for the drone
+const droneIcon = new L.DivIcon({
+  html: `<div style="background-color: var(--color-brand-red, #E60000); width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 4px 12px rgba(230,0,0,0.4); display: flex; align-items: center; justify-content: center; border: 3px solid white;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M10 9l-4 2l2 4l3 -1v-6z" />
+            <path d="M14 9l4 2l-2 4l-3 -1v-6z" />
+            <path d="M12 14v4" />
+            <path d="M10 18h4" />
+            <path d="M4 8l16 0" />
+            <path d="M12 4v4" />
+          </svg>
+        </div>`,
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
 
 function MapControls() {
   const map = useMap();
@@ -53,7 +73,76 @@ function MapControls() {
   );
 }
 
-export function InteractiveMap({ children }: { children?: React.ReactNode }) {
+function FlightPathOverlay({ phase, etaSeconds }: { phase?: string, etaSeconds?: number }) {
+  const map = useMap();
+  const [currentPos, setCurrentPos] = useState<[number, number]>(HCM_CENTER);
+
+  useEffect(() => {
+    if (phase === "TRACKING" && etaSeconds !== undefined) {
+      // Calculate progress (total estimated time originally was ~252s)
+      const totalTime = 252;
+      const progress = Math.min(1, Math.max(0, 1 - (etaSeconds / totalTime)));
+      
+      const currentLat = HCM_CENTER[0] + (DESTINATION[0] - HCM_CENTER[0]) * progress;
+      const currentLng = HCM_CENTER[1] + (DESTINATION[1] - HCM_CENTER[1]) * progress;
+      
+      setCurrentPos([currentLat, currentLng]);
+
+      // Optional: keep drone in view
+      // map.panTo([currentLat, currentLng], { animate: true, duration: 1 });
+    } else {
+      setCurrentPos(HCM_CENTER);
+    }
+  }, [phase, etaSeconds, map]);
+
+  if (phase !== "TRACKING") return null;
+
+  const m = Math.floor((etaSeconds || 0) / 60);
+  const s = Math.floor((etaSeconds || 0) % 60);
+  const formattedEta = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+  return (
+    <>
+      <Polyline 
+        positions={[HCM_CENTER, DESTINATION]} 
+        color="var(--color-brand-red, #E60000)" 
+        weight={3} 
+        dashArray="10, 10" 
+        opacity={0.5} 
+        className="animate-[dash_2s_linear_infinite]"
+      />
+      <Polyline 
+        positions={[HCM_CENTER, currentPos]} 
+        color="var(--color-brand-red, #E60000)" 
+        weight={4} 
+        opacity={0.8} 
+      />
+      <Marker position={currentPos} icon={droneIcon}>
+        <Popup>Flight in transit</Popup>
+      </Marker>
+      
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[400] pointer-events-auto">
+        <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-lg border border-gray-100 flex items-center gap-3">
+          <div className="flex bg-brand-red-light p-1.5 rounded-full">
+            <Clock className="w-4 h-4 text-brand-red" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none">ETA</span>
+            <span className="text-brand-red font-bold leading-none mt-1 animate-pulse">{formattedEta}</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+interface InteractiveMapProps {
+  children?: React.ReactNode;
+  phase?: string;
+  etaSeconds?: number;
+}
+
+export function InteractiveMap({ children, phase, etaSeconds }: InteractiveMapProps) {
   return (
     <div className="absolute inset-0 w-full h-full -z-10 bg-[#F3F4F6]">
       <MapContainer 
@@ -73,15 +162,25 @@ export function InteractiveMap({ children }: { children?: React.ReactNode }) {
           <Popup>142 SkyHub Station</Popup>
         </Marker>
         {/* Delivery Locker */}
-        <Marker position={[10.7820, 106.7050]}>
+        <Marker position={DESTINATION}>
           <Popup>Locker #402, Metro</Popup>
         </Marker>
         
-        {/* Example drone path circle */}
-        <Circle center={HCM_CENTER} pathOptions={{ fillColor: 'var(--color-brand-red)', color: 'var(--color-brand-red)' }} radius={800} fillOpacity={0.05} weight={2} />
+        {/* Example area circle */}
+        <Circle center={HCM_CENTER} pathOptions={{ fillColor: 'var(--color-brand-red, #E60000)', color: 'var(--color-brand-red, #E60000)' }} radius={800} fillOpacity={0.05} weight={2} />
+        
+        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} />
         
         {children}
       </MapContainer>
+      
+      <style>{`
+        @keyframes dash {
+          to {
+            stroke-dashoffset: -20;
+          }
+        }
+      `}</style>
     </div>
   );
 }

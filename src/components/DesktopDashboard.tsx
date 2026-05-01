@@ -265,7 +265,7 @@ export function DesktopDashboard({
       <div className="flex-1 flex flex-col relative z-0 w-full overflow-hidden">
         {/* Map Background grid */}
         <div className="absolute inset-0 z-0 bg-[#F3F4F6]">
-          <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} />
+          <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} deliveryLocation={deliveryLocation} />
           {/* Light Grid Overlay for separation */}
           <div
             className="absolute inset-0 opacity-40 pointer-events-none"
@@ -280,23 +280,7 @@ export function DesktopDashboard({
           />
           <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/80 pointer-events-none" />
 
-          {/* Flight Path Arc Overlay */}
-          {phase === "TRACKING" && (
-            <svg
-              className="absolute bottom-0 right-1/4 w-1/2 h-[70%] z-0 pointer-events-none"
-              viewBox="0 0 400 200"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M0,200 C100,100 200,50 400,0"
-                fill="none"
-                stroke="var(--color-brand-red)"
-                strokeWidth="3"
-                strokeDasharray="8 8"
-                className="opacity-40 animate-pulse"
-              />
-            </svg>
-          )}
+
         </div>
 
         {/* Top Header */}
@@ -366,27 +350,43 @@ export function DesktopDashboard({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="bg-white rounded-[32px] md:rounded-[40px] px-6 md:px-8 py-5 md:py-6 shadow-2xl shadow-gray-300/60 flex items-center justify-between gap-6 md:gap-12 border border-gray-100 w-[90%] max-w-[600px] md:w-fit md:min-w-[500px] pointer-events-auto"
+                className="bg-white rounded-[32px] md:rounded-[40px] px-6 md:px-8 py-5 md:py-6 shadow-2xl shadow-gray-300/60 flex flex-col md:flex-row items-center justify-between gap-6 border border-gray-100 w-[90%] max-w-[700px] pointer-events-auto"
               >
-                <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-brand-red-light flex items-center justify-center shrink-0">
                     <Package className="w-6 h-6 md:w-7 md:h-7 text-brand-red" />
                   </div>
                   <div>
                     <h2 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
-                      Send a Package
+                      Receive a Package
                     </h2>
                     <p className="text-xs md:text-sm font-medium text-gray-500">
-                      Fast drone pickup & drop-off
+                      Select a nearby smart box
                     </p>
                   </div>
                 </div>
+
+                <div className="w-full md:w-64 shrink-0">
+                  <div className="relative">
+                    <select
+                      value={deliveryLocation}
+                      onChange={(e) => setDeliveryLocation(e.target.value)}
+                      className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-2xl py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors"
+                    >
+                      <option value="Smart Locker S-04">Recommended: Smart Locker S-04 (0.2km)</option>
+                      <option value="District 1 Balcony">District 1 Balcony (0.5km)</option>
+                      <option value="Skyway Station A">Skyway Station A (1.2km)</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setPhase("REQUEST")}
-                  className="bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 px-6 md:py-4 md:px-8 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
+                  className="w-full md:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 px-6 md:py-4 md:px-8 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 shrink-0"
                 >
-                  Flight!
+                  Receive Here
                 </button>
               </motion.div>
             )}
@@ -401,7 +401,7 @@ export function DesktopDashboard({
               >
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-                    Confirm Request
+                    Confirm Reception
                   </h2>
                   <button
                     type="button"
@@ -414,7 +414,7 @@ export function DesktopDashboard({
                 <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center">
                   <div className="w-full md:flex-1 bg-gray-50 p-4 rounded-2xl border border-gray-100">
                     <p className="text-xs text-gray-400 font-semibold uppercase mb-1">
-                      Pickup
+                      Sender Location
                     </p>
                     <p className="text-sm md:text-base font-bold text-gray-900">
                       142 SkyHub Station
@@ -425,7 +425,7 @@ export function DesktopDashboard({
                   </div>
                   <div className="w-full md:flex-1 bg-brand-red-light/30 p-4 rounded-2xl border border-brand-red/10">
                     <p className="text-xs text-brand-red font-semibold uppercase mb-1">
-                      Drop-off
+                      Your Locker
                     </p>
                     <p className="text-sm md:text-base font-bold text-gray-900">
                       {deliveryLocation}
@@ -440,9 +440,10 @@ export function DesktopDashboard({
                     );
                     setPhase("TRACKING");
                   }}
-                  className="w-full bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 md:py-4 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
+                  className="w-full bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 md:py-4 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 flex items-center justify-center gap-2"
                 >
-                  Pay $4.50 & Launch
+                  <Check className="w-5 h-5" />
+                  Confirm & Connect
                 </button>
               </motion.div>
             )}

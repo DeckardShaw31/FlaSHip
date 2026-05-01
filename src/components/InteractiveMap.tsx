@@ -73,7 +73,7 @@ function MapControls() {
   );
 }
 
-function FlightPathOverlay({ phase, etaSeconds }: { phase?: string, etaSeconds?: number }) {
+function FlightPathOverlay({ phase, etaSeconds, destination }: { phase?: string, etaSeconds?: number, destination: [number, number] }) {
   const map = useMap();
   const [currentPos, setCurrentPos] = useState<[number, number]>(HCM_CENTER);
 
@@ -83,8 +83,8 @@ function FlightPathOverlay({ phase, etaSeconds }: { phase?: string, etaSeconds?:
       const totalTime = 252;
       const progress = Math.min(1, Math.max(0, 1 - (etaSeconds / totalTime)));
       
-      const currentLat = HCM_CENTER[0] + (DESTINATION[0] - HCM_CENTER[0]) * progress;
-      const currentLng = HCM_CENTER[1] + (DESTINATION[1] - HCM_CENTER[1]) * progress;
+      const currentLat = HCM_CENTER[0] + (destination[0] - HCM_CENTER[0]) * progress;
+      const currentLng = HCM_CENTER[1] + (destination[1] - HCM_CENTER[1]) * progress;
       
       setCurrentPos([currentLat, currentLng]);
 
@@ -93,7 +93,7 @@ function FlightPathOverlay({ phase, etaSeconds }: { phase?: string, etaSeconds?:
     } else {
       setCurrentPos(HCM_CENTER);
     }
-  }, [phase, etaSeconds, map]);
+  }, [phase, etaSeconds, map, destination]);
 
   if (phase !== "TRACKING") return null;
 
@@ -104,7 +104,7 @@ function FlightPathOverlay({ phase, etaSeconds }: { phase?: string, etaSeconds?:
   return (
     <>
       <Polyline 
-        positions={[HCM_CENTER, DESTINATION]} 
+        positions={[HCM_CENTER, destination]} 
         color="var(--color-brand-red, #E60000)" 
         weight={3} 
         dashArray="10, 10" 
@@ -140,9 +140,14 @@ interface InteractiveMapProps {
   children?: React.ReactNode;
   phase?: string;
   etaSeconds?: number;
+  deliveryLocation?: string;
 }
 
-export function InteractiveMap({ children, phase, etaSeconds }: InteractiveMapProps) {
+export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation }: InteractiveMapProps) {
+  let activeDestination: [number, number] = DESTINATION;
+  if (deliveryLocation === "District 1 Balcony") activeDestination = [10.7800, 106.7020];
+  else if (deliveryLocation === "Skyway Station A") activeDestination = [10.7850, 106.7100];
+
   return (
     <div className="absolute inset-0 w-full h-full -z-10 bg-[#F3F4F6]">
       <MapContainer 
@@ -162,14 +167,14 @@ export function InteractiveMap({ children, phase, etaSeconds }: InteractiveMapPr
           <Popup>142 SkyHub Station</Popup>
         </Marker>
         {/* Delivery Locker */}
-        <Marker position={DESTINATION}>
-          <Popup>Locker #402, Metro</Popup>
+        <Marker position={activeDestination}>
+          <Popup>{deliveryLocation || 'Locker #402, Metro'}</Popup>
         </Marker>
         
         {/* Example area circle */}
         <Circle center={HCM_CENTER} pathOptions={{ fillColor: 'var(--color-brand-red, #E60000)', color: 'var(--color-brand-red, #E60000)' }} radius={800} fillOpacity={0.05} weight={2} />
         
-        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} />
+        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} destination={activeDestination} />
         
         {children}
       </MapContainer>

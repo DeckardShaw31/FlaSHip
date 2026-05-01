@@ -18,35 +18,50 @@ export function DesktopDashboard({ user, onLogout }: { user: User, onLogout: () 
   const [trackingId, setTrackingId] = useState<string | null>(null);
   const [deliveryLocation, setDeliveryLocation] = useState("Smart Locker S-04");
   const [contactPrefs, setContactPrefs] = useState("SMS & Push");
+  const [draftLocation, setDraftLocation] = useState("Smart Locker S-04");
+  const [draftPrefs, setDraftPrefs] = useState("SMS & Push");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   useEffect(() => {
     supabase.from('profiles').select('delivery_location, contact_prefs').eq('id', user.id).single()
       .then(({data, error}) => {
          if (data) {
-           if (data.delivery_location) setDeliveryLocation(data.delivery_location);
-           if (data.contact_prefs) setContactPrefs(data.contact_prefs);
+           if (data.delivery_location) {
+             setDeliveryLocation(data.delivery_location);
+             setDraftLocation(data.delivery_location);
+           }
+           if (data.contact_prefs) {
+             setContactPrefs(data.contact_prefs);
+             setDraftPrefs(data.contact_prefs);
+           }
          }
       })
   }, [user.id])
 
-  const handleProfileChange = async (location: string, prefs: string) => {
-    setDeliveryLocation(location);
-    setContactPrefs(prefs);
+  const handleSaveProfile = async () => {
     setIsSavingProfile(true);
     try {
       await supabase.from('profiles').upsert({
         id: user.id,
-        delivery_location: location,
-        contact_prefs: prefs,
+        delivery_location: draftLocation,
+        contact_prefs: draftPrefs,
         updated_at: new Date().toISOString()
       }, { onConflict: 'id' })
+      setDeliveryLocation(draftLocation);
+      setContactPrefs(draftPrefs);
     } catch (e) {
       console.error(e);
     } finally {
       setIsSavingProfile(false);
     }
   }
+
+  const handleCancelProfile = () => {
+    setDraftLocation(deliveryLocation);
+    setDraftPrefs(contactPrefs);
+  }
+
+  const isProfileDirty = draftLocation !== deliveryLocation || draftPrefs !== contactPrefs;
 
   const [simulatedData, setSimulatedData] = useState({
     altitude: 78.2,
@@ -513,42 +528,60 @@ export function DesktopDashboard({ user, onLogout }: { user: User, onLogout: () 
               <div className="flex flex-col gap-2 relative">
                 <label className="text-xs font-bold text-gray-500 uppercase flex justify-between">
                   Preferred Delivery Location
-                  {isSavingProfile && <Loader2 className="w-3 h-3 animate-spin text-brand-red inline" />}
+                  {draftLocation !== deliveryLocation && <span className="text-[10px] text-brand-red font-bold uppercase tracking-wider bg-brand-red/10 px-2 py-0.5 rounded-full">Unsaved</span>}
                 </label>
                 <div className="relative">
                   <select 
-                    value={deliveryLocation}
-                    onChange={(e) => handleProfileChange(e.target.value, contactPrefs)}
-                    className="w-full appearance-none bg-white border border-gray-200 text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors"
+                    value={draftLocation}
+                    onChange={(e) => setDraftLocation(e.target.value)}
+                    className={`w-full appearance-none bg-white border ${draftLocation !== deliveryLocation ? 'border-brand-red ring-1 ring-brand-red/20' : 'border-gray-200'} text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors`}
                   >
                     <option value="Smart Locker S-04">Smart Locker S-04</option>
                     <option value="District 1 Balcony">District 1 Balcony</option>
                     <option value="Central Hub S-01">Central Hub S-01</option>
                     <option value="Skyway Station A">Skyway Station A</option>
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors pointer-events-none ${draftLocation !== deliveryLocation ? 'text-brand-red' : 'text-gray-400'}`} />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2 relative">
                 <label className="text-xs font-bold text-gray-500 uppercase flex justify-between">
                   Contact Preferences
-                  {isSavingProfile && <Loader2 className="w-3 h-3 animate-spin text-brand-red inline" />}
+                  {draftPrefs !== contactPrefs && <span className="text-[10px] text-brand-red font-bold uppercase tracking-wider bg-brand-red/10 px-2 py-0.5 rounded-full">Unsaved</span>}
                 </label>
                 <div className="relative">
                   <select 
-                    value={contactPrefs}
-                    onChange={(e) => handleProfileChange(deliveryLocation, e.target.value)}
-                    className="w-full appearance-none bg-white border border-gray-200 text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors"
+                    value={draftPrefs}
+                    onChange={(e) => setDraftPrefs(e.target.value)}
+                    className={`w-full appearance-none bg-white border ${draftPrefs !== contactPrefs ? 'border-brand-red ring-1 ring-brand-red/20' : 'border-gray-200'} text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors`}
                   >
                     <option value="SMS & Push">SMS & Push Notification</option>
                     <option value="Push Only">Push Notification Only</option>
                     <option value="Email Only">Email Only</option>
                     <option value="Do Not Disturb">Do Not Disturb</option>
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors pointer-events-none ${draftPrefs !== contactPrefs ? 'text-brand-red' : 'text-gray-400'}`} />
                 </div>
               </div>
+
+              {isProfileDirty && (
+                <div className="flex items-center gap-3 mt-2">
+                  <button 
+                    onClick={handleCancelProfile}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSaveProfile}
+                    disabled={isSavingProfile}
+                    className="flex-[2] py-3 px-4 rounded-xl font-bold text-sm bg-brand-red text-white hover:bg-brand-red-dark transition-colors shadow-lg shadow-brand-red/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                  </button>
+                </div>
+              )}
 
               <button className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red mt-2">
                 <span className="font-semibold text-gray-700">Account Settings</span>

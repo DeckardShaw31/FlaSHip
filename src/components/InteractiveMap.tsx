@@ -15,6 +15,17 @@ L.Icon.Default.mergeOptions({
 
 const HCM_CENTER: [number, number] = [10.7769, 106.7009];
 const DESTINATION: [number, number] = [10.7820, 106.7050];
+const USER_LOCATION: [number, number] = [10.7790, 106.7015];
+
+const pingIcon = new L.DivIcon({
+  html: `<div class="relative w-4 h-4">
+           <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-75" style="animation-duration: 2s;"></div>
+           <div class="absolute inset-0.5 bg-blue-600 rounded-full border-2 border-white shadow-sm"></div>
+         </div>`,
+  className: '!bg-transparent border-none',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
 
 // Custom icon for the drone
 const droneIcon = new L.DivIcon({
@@ -169,6 +180,11 @@ export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation, 
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <MapControls />
+        {/* User Location */}
+        <Marker position={USER_LOCATION} icon={pingIcon}>
+          <Popup>Your Location</Popup>
+        </Marker>
+        
         {/* Drone Hub */}
         <Marker position={HCM_CENTER}>
           <Popup>142 SkyHub Station</Popup>

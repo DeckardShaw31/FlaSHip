@@ -85,7 +85,7 @@ export function LockerSection() {
                 disabled={isUnlocking || unlocked}
                 className={`mt-8 px-8 py-4 rounded-xl font-bold text-sm w-full max-w-xs flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 z-10 ${
                   unlocked ? 'bg-green-100 text-green-700 cursor-default focus:ring-green-500' : 
-                  'bg-brand-red text-white hover:bg-brand-red-dark shadow-lg shadow-brand-red/20 focus:ring-brand-red disabled:opacity-80'
+                  'bg-brand-red text-white hover:bg-brand-red-dark shadow-lg shadow-brand-red/20 transition-all active:scale-95 duration-200 focus:ring-brand-red disabled:opacity-80'
                 }`}
               >
                 {!unlocked ? (

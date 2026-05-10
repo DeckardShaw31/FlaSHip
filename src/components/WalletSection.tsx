@@ -78,7 +78,7 @@ export function WalletSection() {
               className={`w-full mt-6 flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-sm transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 isSuccess 
                   ? 'bg-green-600 text-white shadow-green-600/20 focus:ring-green-600' 
-                  : 'bg-brand-red text-white hover:bg-brand-red-dark shadow-brand-red/20 focus:ring-brand-red'
+                  : 'bg-brand-red text-white hover:bg-brand-red-dark shadow-brand-red/20 focus:ring-brand-red active:scale-95 transition-all duration-200'
               }`}
             >
               {isSuccess ? (

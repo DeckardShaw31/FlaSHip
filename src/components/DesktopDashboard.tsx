@@ -219,7 +219,7 @@ export function DesktopDashboard({
         
         {/* Tracking Map Section logic wrapper */}
         <div className={`absolute inset-0 z-0 transition-opacity duration-300 ${activeTab === 'TRACKING' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-          <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} deliveryLocation={deliveryLocation} onSelectLocation={setDeliveryLocation} />
+          <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} speed={simulatedData.speed} deliveryLocation={deliveryLocation} onSelectLocation={setDeliveryLocation} />
           {/* Light Grid Overlay for separation */}
           <div
             className="absolute inset-0 opacity-40 pointer-events-none"
@@ -295,7 +295,7 @@ export function DesktopDashboard({
 
                   <button
                     onClick={() => setPhase("REQUEST")}
-                    className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 px-6 font-bold shadow-lg shadow-brand-red/30 whitespace-nowrap focus:outline-none"
+                    className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-all active:scale-95 duration-200 rounded-full py-3 px-6 font-bold shadow-lg shadow-brand-red/30 whitespace-nowrap focus:outline-none"
                   >
                     Receive Here
                   </button>
@@ -329,7 +329,7 @@ export function DesktopDashboard({
                   </div>
                   <button
                     onClick={() => { setTrackingId(`#FL-${Math.floor(1000 + Math.random() * 9000)}-01`); setPhase("TRACKING"); }}
-                    className="w-full bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 font-bold shadow-lg shadow-brand-red/30 flex items-center justify-center gap-2"
+                    className="w-full bg-brand-red text-white hover:bg-brand-red-dark transition-all active:scale-95 duration-200 rounded-full py-3 font-bold shadow-lg shadow-brand-red/30 flex items-center justify-center gap-2"
                   >
                     <Check className="w-5 h-5" /> Confirm & Connect
                   </button>
@@ -354,7 +354,7 @@ export function DesktopDashboard({
 
                   <button
                     onClick={() => setPhase("DELIVERED")}
-                    className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark rounded-2xl py-3 px-6 font-bold shadow-lg shadow-brand-red/30"
+                    className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-all active:scale-95 duration-200 rounded-2xl py-3 px-6 font-bold shadow-lg shadow-brand-red/30"
                   >
                     Sim Land
                   </button>
@@ -380,7 +380,7 @@ export function DesktopDashboard({
                     <button onClick={() => setPhase("DASHBOARD")} className="flex-1 bg-white border border-gray-200 text-gray-600 rounded-full py-3 font-bold flex items-center justify-center gap-2">
                       <QrCode className="w-5 h-5" /> QR
                     </button>
-                    <button onClick={() => { setPhase("DASHBOARD"); setActiveTab("LOCKER"); }} className="flex-[2] bg-green-600 text-white rounded-full py-3 font-bold hover:bg-green-700 shadow-lg flex items-center justify-center gap-2">
+                    <button onClick={() => { setPhase("DASHBOARD"); setActiveTab("LOCKER"); }} className="flex-[2] bg-green-600 text-white rounded-full py-3 font-bold hover:bg-green-700 transition-all active:scale-95 duration-200 shadow-lg flex items-center justify-center gap-2">
                       <Unlock className="w-5 h-5" /> Unlock
                     </button>
                   </div>

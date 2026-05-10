@@ -84,7 +84,7 @@ function MapControls() {
   );
 }
 
-function FlightPathOverlay({ phase, etaSeconds, destination }: { phase?: string, etaSeconds?: number, destination: [number, number] }) {
+function FlightPathOverlay({ phase, etaSeconds, speed, destination }: { phase?: string, etaSeconds?: number, speed?: number, destination: [number, number] }) {
   const map = useMap();
   const [currentPos, setCurrentPos] = useState<[number, number]>(HCM_CENTER);
 
@@ -92,7 +92,12 @@ function FlightPathOverlay({ phase, etaSeconds, destination }: { phase?: string,
     if (phase === "TRACKING" && etaSeconds !== undefined) {
       // Calculate progress (total estimated time originally was ~252s)
       const totalTime = 252;
-      const progress = Math.min(1, Math.max(0, 1 - (etaSeconds / totalTime)));
+      
+      // We can use speed to add a slight real-time jitter/offset to make it feel more alive
+      const speedOffset = speed ? (speed - 45) / 1000 : 0; // arbitrary small offset based on speed variance
+      
+      let progress = 1 - (etaSeconds / totalTime);
+      progress = Math.min(1, Math.max(0, progress + speedOffset * 0.01));
       
       const currentLat = HCM_CENTER[0] + (destination[0] - HCM_CENTER[0]) * progress;
       const currentLng = HCM_CENTER[1] + (destination[1] - HCM_CENTER[1]) * progress;
@@ -104,7 +109,7 @@ function FlightPathOverlay({ phase, etaSeconds, destination }: { phase?: string,
     } else {
       setCurrentPos(HCM_CENTER);
     }
-  }, [phase, etaSeconds, map, destination]);
+  }, [phase, etaSeconds, speed, map, destination]);
 
   if (phase !== "TRACKING") return null;
 
@@ -151,6 +156,7 @@ interface InteractiveMapProps {
   children?: React.ReactNode;
   phase?: string;
   etaSeconds?: number;
+  speed?: number;
   deliveryLocation?: string;
   onSelectLocation?: (location: string) => void;
 }
@@ -164,7 +170,7 @@ function LocationPicker({ onSelectCoordinate }: { onSelectCoordinate: (lat: numb
   return null;
 }
 
-export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation, onSelectLocation }: InteractiveMapProps) {
+export function InteractiveMap({ children, phase, etaSeconds, speed, deliveryLocation, onSelectLocation }: InteractiveMapProps) {
   // Use a custom state for coordinate if the deliveryLocation is a coordinate (e.g., "Lat, Lng")
   const [customCoords, setCustomCoords] = useState<[number, number]>(USER_LOCATION);
 
@@ -218,7 +224,7 @@ export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation, 
         {/* Example area circle */}
         <Circle center={HCM_CENTER} pathOptions={{ fillColor: 'var(--color-brand-red, #E60000)', color: 'var(--color-brand-red, #E60000)' }} radius={800} fillOpacity={0.05} weight={2} />
         
-        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} destination={customCoords} />
+        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} speed={speed} destination={customCoords} />
         
         {children}
       </MapContainer>

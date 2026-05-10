@@ -114,7 +114,7 @@ export function ProfileSection({
              <button 
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-colors px-6 py-3 font-bold rounded-xl shadow-md shadow-brand-red/20 focus:outline-none flex items-center justify-center gap-2 min-w-[120px]"
+                className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-all active:scale-95 duration-200 px-6 py-3 font-bold rounded-xl shadow-md shadow-brand-red/20 focus:outline-none flex items-center justify-center gap-2 min-w-[120px]"
               >
                 {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Changes"}
               </button>

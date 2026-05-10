@@ -181,32 +181,23 @@ interface InteractiveMapProps {
   onSelectLocation?: (location: string) => void;
 }
 
-function LocationPicker({ onSelectCoordinate }: { onSelectCoordinate: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click(e) {
-      onSelectCoordinate(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-}
+export const AVAILABLE_LOCATIONS = [
+  { name: "Smart Locker S-04", coords: [10.7820, 106.7050] as [number, number] },
+  { name: "District 1 Balcony", coords: [10.7800, 106.7020] as [number, number] },
+  { name: "Skyway Station A", coords: [10.7850, 106.7100] as [number, number] },
+  { name: "Metro Hub 2", coords: [10.7760, 106.7010] as [number, number] },
+  { name: "Parkside Locker", coords: [10.7785, 106.6980] as [number, number] },
+  { name: "Riverside Drop S-09", coords: [10.7710, 106.7060] as [number, number] },
+  { name: "Tech Park Locker", coords: [10.7815, 106.6950] as [number, number] },
+  { name: "University Gate Locker", coords: [10.7725, 106.6920] as [number, number] },
+  { name: "Central Mall Pickup", coords: [10.7745, 106.7040] as [number, number] },
+  { name: "Residential Complex B", coords: [10.7840, 106.7000] as [number, number] },
+];
 
 export function InteractiveMap({ children, phase, etaSeconds, speed, deliveryLocation, onSelectLocation }: InteractiveMapProps) {
-  // Use a custom state for coordinate if the deliveryLocation is a coordinate (e.g., "Lat, Lng")
-  const [customCoords, setCustomCoords] = useState<[number, number]>(USER_LOCATION);
-
-  // Parse custom coords if deliveryLocation is formatted as "Lat, Lng"
-  useEffect(() => {
-    if (deliveryLocation?.includes(',')) {
-      const parts = deliveryLocation.split(',');
-      const lat = parseFloat(parts[0]);
-      const lng = parseFloat(parts[1]);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        setCustomCoords([lat, lng]);
-      }
-    }
-  }, [deliveryLocation]);
-
-  let activeDestination: [number, number] = customCoords;
+  // Find coordinates based on selected name
+  const selectedLoc = AVAILABLE_LOCATIONS.find(l => l.name === deliveryLocation) || AVAILABLE_LOCATIONS[0];
+  let activeDestination = selectedLoc.coords;
 
   return (
     <div className="absolute inset-0 w-full h-full -z-10 bg-[#F3F4F6]">
@@ -217,34 +208,44 @@ export function InteractiveMap({ children, phase, etaSeconds, speed, deliveryLoc
         zoomControl={false}
         className="w-full h-full z-0"
       >
-        <LocationPicker 
-          onSelectCoordinate={(lat, lng) => {
-            if (phase === "DASHBOARD") {
-               setCustomCoords([lat, lng]);
-               onSelectLocation?.(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-            }
-          }} 
-        />
         <TileLayer
           attribution='&amp;copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <MapControls />
         
-        {/* User Location / Selected Pinpoint */}
-        <Marker position={customCoords} icon={pingIcon}>
-          <Popup>Chosen Delivery Location</Popup>
-        </Marker>
-        
         {/* Drone Hub */}
         <Marker position={HCM_CENTER}>
           <Popup>142 SkyHub Station</Popup>
         </Marker>
+
+        {/* Delivery Lockers */}
+        {phase !== "TRACKING" ? (
+          AVAILABLE_LOCATIONS.map(loc => (
+            <Marker 
+              key={loc.name} 
+              position={loc.coords} 
+              eventHandlers={{
+                click: () => {
+                  if (phase === "DASHBOARD" || phase === "REQUEST") {
+                    onSelectLocation?.(loc.name);
+                  }
+                }
+              }}
+            >
+              <Popup>{loc.name} {deliveryLocation === loc.name && "(Selected)"}</Popup>
+            </Marker>
+          ))
+        ) : (
+          <Marker position={activeDestination} icon={pingIcon}>
+            <Popup>Destination: {deliveryLocation}</Popup>
+          </Marker>
+        )}
         
         {/* Example area circle */}
         <Circle center={HCM_CENTER} pathOptions={{ fillColor: 'var(--color-brand-red, #E60000)', color: 'var(--color-brand-red, #E60000)' }} radius={800} fillOpacity={0.05} weight={2} />
         
-        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} speed={speed} destination={customCoords} />
+        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} speed={speed} destination={activeDestination} />
         
         {children}
       </MapContainer>

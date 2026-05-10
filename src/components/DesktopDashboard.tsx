@@ -51,7 +51,7 @@ export function DesktopDashboard({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [trackingId, setTrackingId] = useState<string | null>(null);
-  const [deliveryLocation, setDeliveryLocation] = useState("10.7769, 106.7009");
+  const [deliveryLocation, setDeliveryLocation] = useState("Smart Locker S-04");
 
   const [simulatedData, setSimulatedData] = useState({
     altitude: 78.2,
@@ -342,22 +342,22 @@ export function DesktopDashboard({
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 50 }}
-                  className="bg-white rounded-[32px] px-6 py-5 shadow-2xl shadow-gray-300/60 flex flex-col sm:flex-row items-center gap-6 relative border border-gray-100"
+                  className="bg-white rounded-[32px] px-6 py-5 shadow-2xl shadow-gray-300/60 flex flex-col sm:flex-row items-center justify-between gap-6 relative border border-gray-100"
                 >
-                  <div className="flex flex-col w-full sm:w-auto flex-1">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-2xl font-bold text-gray-900">In Transit</h2>
-                      <h2 className="text-2xl font-bold text-brand-red animate-pulse">{formatEta(simulatedData.etaSeconds)}</h2>
-                    </div>
-                    <p className="text-xs font-medium text-gray-500 mt-1">To {deliveryLocation}</p>
+                  <div className="flex flex-col text-left flex-1 min-w-0">
+                    <h2 className="text-2xl font-bold text-gray-900 truncate">In Transit</h2>
+                    <p className="text-xs font-medium text-gray-500 mt-1 truncate" title={deliveryLocation}>To {deliveryLocation.includes(',') ? `Drop coords: ${deliveryLocation}` : deliveryLocation}</p>
                   </div>
 
-                  <button
-                    onClick={() => setPhase("DELIVERED")}
-                    className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-all active:scale-95 duration-200 rounded-2xl py-3 px-6 font-bold shadow-lg shadow-brand-red/30"
-                  >
-                    Sim Land
-                  </button>
+                  <div className="flex items-center gap-6">
+                    <h2 className="text-3xl font-bold text-brand-red animate-pulse shrink-0">{formatEta(simulatedData.etaSeconds)}</h2>
+                    <button
+                      onClick={() => setPhase("DELIVERED")}
+                      className="w-full sm:w-auto shrink-0 bg-brand-red text-white hover:bg-brand-red-dark transition-all active:scale-95 duration-200 rounded-2xl py-3 px-6 font-bold shadow-lg shadow-brand-red/30"
+                    >
+                      Sim Land
+                    </button>
+                  </div>
                 </motion.div>
               )}
 

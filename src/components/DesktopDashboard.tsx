@@ -252,7 +252,7 @@ export function DesktopDashboard({
           </div>
 
           {/* Floating Tracking UI */}
-          <div className="absolute left-6 right-6 md:left-8 bottom-[100px] md:bottom-8 md:w-[600px] pointer-events-auto z-10 flex flex-col gap-6">
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[100px] md:bottom-8 w-[90%] md:w-[600px] pointer-events-auto z-10 flex flex-col gap-6">
             
             {/* Tracking Stats row */}
             <div className="flex flex-row gap-4 mb-2">

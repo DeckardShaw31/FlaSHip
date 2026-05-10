@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Plus, Minus, LocateFixed, Clock } from 'lucide-react';
@@ -155,16 +155,32 @@ interface InteractiveMapProps {
   onSelectLocation?: (location: string) => void;
 }
 
-const AVAILABLE_LOCATIONS = [
-  { name: "Smart Locker S-04", coords: [10.7820, 106.7050] as [number, number] },
-  { name: "District 1 Balcony", coords: [10.7800, 106.7020] as [number, number] },
-  { name: "Skyway Station A", coords: [10.7850, 106.7100] as [number, number] },
-];
+function LocationPicker({ onSelectCoordinate }: { onSelectCoordinate: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onSelectCoordinate(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
 
 export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation, onSelectLocation }: InteractiveMapProps) {
-  let activeDestination: [number, number] = DESTINATION;
-  const selectedLoc = AVAILABLE_LOCATIONS.find(l => l.name === deliveryLocation);
-  if (selectedLoc) activeDestination = selectedLoc.coords;
+  // Use a custom state for coordinate if the deliveryLocation is a coordinate (e.g., "Lat, Lng")
+  const [customCoords, setCustomCoords] = useState<[number, number]>(USER_LOCATION);
+
+  // Parse custom coords if deliveryLocation is formatted as "Lat, Lng"
+  useEffect(() => {
+    if (deliveryLocation?.includes(',')) {
+      const parts = deliveryLocation.split(',');
+      const lat = parseFloat(parts[0]);
+      const lng = parseFloat(parts[1]);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setCustomCoords([lat, lng]);
+      }
+    }
+  }, [deliveryLocation]);
+
+  let activeDestination: [number, number] = customCoords;
 
   return (
     <div className="absolute inset-0 w-full h-full -z-10 bg-[#F3F4F6]">
@@ -175,43 +191,34 @@ export function InteractiveMap({ children, phase, etaSeconds, deliveryLocation, 
         zoomControl={false}
         className="w-full h-full z-0"
       >
+        <LocationPicker 
+          onSelectCoordinate={(lat, lng) => {
+            if (phase === "DASHBOARD") {
+               setCustomCoords([lat, lng]);
+               onSelectLocation?.(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+            }
+          }} 
+        />
         <TileLayer
           attribution='&amp;copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <MapControls />
-        {/* User Location */}
-        <Marker position={USER_LOCATION} icon={pingIcon}>
-          <Popup>Your Location</Popup>
+        
+        {/* User Location / Selected Pinpoint */}
+        <Marker position={customCoords} icon={pingIcon}>
+          <Popup>Chosen Delivery Location</Popup>
         </Marker>
         
         {/* Drone Hub */}
         <Marker position={HCM_CENTER}>
           <Popup>142 SkyHub Station</Popup>
         </Marker>
-        {/* Delivery Lockers */}
-        {phase !== "TRACKING" ? (
-          AVAILABLE_LOCATIONS.map(loc => (
-            <Marker 
-              key={loc.name} 
-              position={loc.coords} 
-              eventHandlers={{
-                click: () => onSelectLocation?.(loc.name)
-              }}
-            >
-              <Popup>{loc.name} {deliveryLocation === loc.name && "(Selected)"}</Popup>
-            </Marker>
-          ))
-        ) : (
-          <Marker position={activeDestination}>
-            <Popup>{deliveryLocation || 'Locker #402, Metro'}</Popup>
-          </Marker>
-        )}
         
         {/* Example area circle */}
         <Circle center={HCM_CENTER} pathOptions={{ fillColor: 'var(--color-brand-red, #E60000)', color: 'var(--color-brand-red, #E60000)' }} radius={800} fillOpacity={0.05} weight={2} />
         
-        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} destination={activeDestination} />
+        <FlightPathOverlay phase={phase} etaSeconds={etaSeconds} destination={customCoords} />
         
         {children}
       </MapContainer>

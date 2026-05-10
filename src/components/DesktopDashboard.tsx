@@ -5,7 +5,6 @@ import {
   Map as MapIcon,
   Clock,
   Signal,
-  Battery,
   Eye,
   Unlock,
   HeadphonesIcon,
@@ -16,13 +15,28 @@ import {
   User as UserIcon,
   LogOut,
   Loader2,
+  LayoutDashboard,
+  Box,
+  Vault,
+  Wallet,
+  Bell,
+  Menu,
+  X
 } from "lucide-react";
 import { InteractiveMap } from "./InteractiveMap";
 import { DroneLogo } from "./DroneLogo";
 import { User } from "../App";
 import { supabase } from "../lib/supabase";
+import { OverviewSection } from "./OverviewSection";
+import { OrdersSection } from "./OrdersSection";
+import { LockerSection } from "./LockerSection";
+import { WalletSection } from "./WalletSection";
+import { NotificationsSection } from "./NotificationsSection";
+import { ProfileSection } from "./ProfileSection";
 
 type AppPhase = "DASHBOARD" | "REQUEST" | "TRACKING" | "DELIVERED";
+
+export type SidebarTab = "DASHBOARD" | "ORDERS" | "TRACKING" | "LOCKER" | "WALLET" | "NOTIFICATIONS" | "PROFILE";
 
 export function DesktopDashboard({
   user,
@@ -33,64 +47,11 @@ export function DesktopDashboard({
 }) {
   const [phase, setPhase] = useState<AppPhase>("DASHBOARD");
   const [expandedHistory, setExpandedHistory] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"MAP" | "HISTORY" | "PROFILE">(
-    "MAP",
-  );
+  const [activeTab, setActiveTab] = useState<SidebarTab>("DASHBOARD");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [trackingId, setTrackingId] = useState<string | null>(null);
-  const [deliveryLocation, setDeliveryLocation] = useState("Smart Locker S-04");
-  const [contactPrefs, setContactPrefs] = useState("SMS & Push");
-  const [draftLocation, setDraftLocation] = useState("Smart Locker S-04");
-  const [draftPrefs, setDraftPrefs] = useState("SMS & Push");
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-
-  useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("delivery_location, contact_prefs")
-      .eq("id", user.id)
-      .single()
-      .then(({ data, error }) => {
-        if (data) {
-          if (data.delivery_location) {
-            setDeliveryLocation(data.delivery_location);
-            setDraftLocation(data.delivery_location);
-          }
-          if (data.contact_prefs) {
-            setContactPrefs(data.contact_prefs);
-            setDraftPrefs(data.contact_prefs);
-          }
-        }
-      });
-  }, [user.id]);
-
-  const handleSaveProfile = async () => {
-    setIsSavingProfile(true);
-    try {
-      await supabase.from("profiles").upsert(
-        {
-          id: user.id,
-          delivery_location: draftLocation,
-          contact_prefs: draftPrefs,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" },
-      );
-      setDeliveryLocation(draftLocation);
-      setContactPrefs(draftPrefs);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSavingProfile(false);
-    }
-  };
-
-  const handleCancelProfile = () => {
-    setDraftLocation(deliveryLocation);
-    setDraftPrefs(contactPrefs);
-  };
-
-  const isProfileDirty =
-    draftLocation !== deliveryLocation || draftPrefs !== contactPrefs;
+  const [deliveryLocation, setDeliveryLocation] = useState("10.7769, 106.7009");
 
   const [simulatedData, setSimulatedData] = useState({
     altitude: 78.2,
@@ -98,27 +59,6 @@ export function DesktopDashboard({
     battery: 84,
     etaSeconds: 252, // 4:12 default
   });
-
-  const flightHistory = [
-    {
-      id: "#FL-8812",
-      date: "Today, 10:45 AM",
-      origin: "142 SkyHub Station",
-      destination: "Locker S-04, Metro",
-      status: "Delivered",
-      weight: "1.2kg",
-      duration: "4m 12s",
-    },
-    {
-      id: "#FL-8805",
-      date: "Yesterday",
-      origin: "Central Hub",
-      destination: "District 1 Balcony",
-      status: "Delivered",
-      weight: "0.8kg",
-      duration: "5m 30s",
-    },
-  ];
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -163,108 +103,122 @@ export function DesktopDashboard({
   };
 
   return (
-    <div className="flex w-full h-full bg-gray-50 text-gray-800 font-sans overflow-hidden">
-      {/* Bottom Nav / Left Sidebar */}
-      <div className="fixed bottom-0 left-0 w-full md:relative md:w-[80px] bg-white border-t md:border-t-0 md:border-r border-gray-200 flex flex-row md:flex-col items-center justify-around md:justify-start py-4 md:py-6 shrink-0 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] md:shadow-sm">
-        <div className="hidden md:flex w-12 h-12 rounded-xl bg-brand-red items-center justify-center mb-10 shadow-lg shadow-brand-red/20">
-          <Package className="w-6 h-6 text-white" />
+    <div className="flex w-full h-full bg-gray-50 text-gray-800 font-sans overflow-hidden flex-col md:flex-row">
+      {/* Mobile Top Navbar */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 z-50 shadow-sm relative">
+        <div className="flex items-center gap-2">
+           <DroneLogo className="w-6 h-6 text-brand-red" />
+           <h1 className="text-xl font-bold text-brand-red tracking-tight">FlaSHip</h1>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 text-gray-500 hover:text-gray-900 focus:outline-none"
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+
+        {/* Mobile Navigation Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-xl py-4 px-4 flex flex-col gap-2 z-50"
+            >
+              {[
+                { id: "DASHBOARD", label: "Dashboard", icon: LayoutDashboard },
+                { id: "ORDERS", label: "Orders", icon: Box },
+                { id: "TRACKING", label: "Drone Tracking", icon: MapIcon },
+                { id: "LOCKER", label: "Smart Lockers", icon: Vault },
+                { id: "WALLET", label: "Wallet", icon: Wallet },
+                { id: "NOTIFICATIONS", label: "Notifications", icon: Bell },
+                { id: "PROFILE", label: "Profile", icon: UserIcon },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id as SidebarTab); setIsMobileMenuOpen(false); }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-colors ${activeTab === tab.id ? 'bg-brand-red-light/50 text-brand-red' : 'text-gray-600 hover:bg-gray-50'}`}
+                >
+                  <tab.icon className="w-5 h-5" />
+                  {tab.label}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Desktop Left Sidebar */}
+      <aside className="hidden md:flex w-[280px] bg-white border-r border-gray-200 flex-col py-6 shrink-0 z-50 shadow-sm relative h-full">
+        <div className="px-6 mb-8 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-red items-center justify-center flex shadow-lg shadow-brand-red/20 shrink-0">
+            <DroneLogo className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-brand-red tracking-tight leading-tight">FlaSHip</h1>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivery Platform</p>
+          </div>
         </div>
 
-        <div className="flex flex-row md:flex-col gap-2 md:gap-8 flex-1 w-full justify-center md:justify-start items-center">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("MAP");
-              document
-                .getElementById("mobile-drawer")
-                ?.classList.add("translate-y-[120%]");
-            }}
-            aria-label="Map view"
-            className={`p-3 rounded-xl transition-colors relative flex-1 md:flex-none flex justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${activeTab === "MAP" ? "bg-gray-50 text-brand-red" : "text-gray-400 hover:text-brand-red hover:bg-gray-50"}`}
-          >
-            {activeTab === "MAP" && (
-              <div className="absolute top-0 md:left-0 md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-x-0 md:-translate-y-1/2 w-8 md:w-1 h-1 md:h-6 bg-brand-red rounded-b-full md:rounded-b-none md:rounded-r-full" />
-            )}
-            <MapIcon className="w-6 h-6" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("HISTORY");
-              document
-                .getElementById("mobile-drawer")
-                ?.classList.remove("translate-y-[120%]");
-            }}
-            aria-label="Flight history"
-            className={`p-3 rounded-xl transition-colors relative flex-1 md:flex-none flex justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 ${activeTab === "HISTORY" ? "bg-gray-50 text-brand-red" : "text-gray-400 hover:text-brand-red hover:bg-gray-50"}`}
-          >
-            {activeTab === "HISTORY" && (
-              <div className="absolute top-0 md:left-0 md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-x-0 md:-translate-y-1/2 w-8 md:w-1 h-1 md:h-6 bg-brand-red rounded-b-full md:rounded-b-none md:rounded-r-full" />
-            )}
-            <Clock className="w-6 h-6" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("PROFILE");
-              document
-                .getElementById("mobile-drawer")
-                ?.classList.remove("translate-y-[120%]");
-            }}
-            aria-label="Profile"
-            className={`md:hidden p-3 rounded-xl transition-colors relative flex-1 flex justify-center items-center focus:outline-none`}
-          >
-            {activeTab === "PROFILE" && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-brand-red rounded-b-full" />
-            )}
-            <div
-              className={`w-8 h-8 rounded-full border-2 flex items-center justify-center bg-gray-100 overflow-hidden transition-all ${activeTab === "PROFILE" ? "border-brand-red shadow-sm shadow-brand-red/20" : "border-gray-200"}`}
+        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
+          {[
+            { id: "DASHBOARD", label: "Dashboard", icon: LayoutDashboard },
+            { id: "ORDERS", label: "Orders", icon: Box },
+            { id: "TRACKING", label: "Drone Tracking", icon: MapIcon },
+            { id: "LOCKER", label: "Smart Lockers", icon: Vault },
+            { id: "WALLET", label: "Wallet", icon: Wallet },
+            { id: "NOTIFICATIONS", label: "Notifications", icon: Bell },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as SidebarTab)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red ${
+                activeTab === tab.id 
+                  ? 'bg-brand-red text-white shadow-md shadow-brand-red/20' 
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+              }`}
             >
-              <span className="text-xs font-bold text-gray-600 uppercase">
+              <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`} />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="px-4 mt-auto pt-4 border-t border-gray-100">
+          <button 
+            onClick={() => setActiveTab('PROFILE')}
+            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red text-left ${
+              activeTab === 'PROFILE' ? 'bg-gray-100 ring-1 ring-gray-200' : 'hover:bg-gray-50'
+            }`}
+          >
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden outline outline-2 outline-white shadow-sm">
+              <span className="text-sm font-bold text-gray-600 uppercase">
                 {user.name ? user.name.charAt(0) : user.email?.charAt(0) || "U"}
               </span>
             </div>
-          </button>
-
-          <button
-            type="button"
-            aria-label="Toggle sidebar"
-            aria-haspopup="dialog"
-            className="md:hidden p-3 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-brand-red transition-colors flex-1 flex justify-center items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
-            onClick={() =>
-              document
-                .getElementById("mobile-drawer")
-                ?.classList.toggle("translate-y-[120%]")
-            }
-          >
-            <span className="sr-only">Toggle drawer</span>
-            <div className="w-1.5 h-1.5 bg-current rounded-full" />
-            <div className="w-1.5 h-1.5 bg-current rounded-full ml-1" />
-            <div className="w-1.5 h-1.5 bg-current rounded-full ml-1" />
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-bold text-gray-900 truncate">{user.name || "User"}</p>
+              <p className="text-xs font-semibold text-gray-500 truncate">{user.email}</p>
+            </div>
           </button>
         </div>
-
-        <button
-          onClick={() => {
-            setActiveTab("PROFILE");
-            document
-              .getElementById("mobile-drawer")
-              ?.classList.remove("translate-y-[120%]");
-          }}
-          aria-label="Profile"
-          className={`hidden md:flex w-12 h-12 rounded-full border-2 items-center justify-center bg-gray-100 overflow-hidden transition-all focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2 ${activeTab === "PROFILE" ? "border-brand-red shadow-md shadow-brand-red/20" : "border-gray-200 hover:border-brand-red/50"}`}
-        >
-          <span className="text-lg font-bold text-gray-600 uppercase">
-            {user.name ? user.name.charAt(0) : user.email?.charAt(0) || "U"}
-          </span>
-        </button>
-      </div>
+      </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative z-0 w-full overflow-hidden">
-        {/* Map Background grid */}
-        <div className="absolute inset-0 z-0 bg-[#F3F4F6]">
+      <main className="flex-1 flex flex-col relative z-0 w-full h-full overflow-hidden bg-gray-50">
+        
+        {/* Render sections conditionally */}
+        {activeTab === 'DASHBOARD' && <OverviewSection />}
+        {activeTab === 'ORDERS' && <OrdersSection />}
+        {activeTab === 'LOCKER' && <LockerSection />}
+        {activeTab === 'WALLET' && <WalletSection />}
+        {activeTab === 'NOTIFICATIONS' && <NotificationsSection />}
+        
+        {activeTab === 'PROFILE' && <ProfileSection user={user} onLogout={onLogout} />}
+        
+        {/* Tracking Map Section logic wrapper */}
+        <div className={`absolute inset-0 z-0 transition-opacity duration-300 ${activeTab === 'TRACKING' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
           <InteractiveMap phase={phase} etaSeconds={simulatedData.etaSeconds} deliveryLocation={deliveryLocation} onSelectLocation={setDeliveryLocation} />
           {/* Light Grid Overlay for separation */}
           <div
@@ -280,634 +234,163 @@ export function DesktopDashboard({
           />
           <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/80 pointer-events-none" />
 
-
-        </div>
-
-        {/* Top Header */}
-        <div className="h-20 px-4 md:px-8 mt-4 md:mt-0 flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 z-10 pointer-events-none">
-          <div className="flex items-center gap-2">
-            <DroneLogo className="w-8 h-8 text-brand-red" />
-            <h1 className="text-2xl font-bold text-brand-red tracking-tight">
-              FlaSHip
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-3 ml-auto md:ml-4 pointer-events-auto">
-            <div className="hidden md:flex px-3 py-1 rounded-full border border-green-500/30 bg-green-50 text-green-600 text-xs font-bold tracking-wider">
-              SYSTEM LIVE
-            </div>
-            <div className="px-3 md:px-4 py-1.5 rounded-full bg-white border border-gray-200 flex items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              D-742 Active
-            </div>
-            <div className="hidden md:flex px-4 py-1.5 rounded-full bg-white border border-gray-200 items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
-              <Signal className="w-3.5 h-3.5 text-blue-500" />
-              98% Signal
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Delivery Info */}
-        {(phase === "TRACKING" || phase === "DELIVERED") && (
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="mt-4 md:mt-8 mx-4 md:ml-8 w-[calc(100%-2rem)] md:w-[320px] bg-white/90 backdrop-blur-md rounded-3xl border border-gray-100 p-5 md:p-6 z-10 shadow-xl pointer-events-auto"
-          >
-            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">
-              Delivery Info
-            </h3>
-
-            <div className="mb-6">
-              <p className="text-xs text-gray-400 mb-1 font-semibold uppercase">
-                Package ID
-              </p>
-              <p className="text-xl font-bold text-gray-900">
-                {trackingId || "#FL-8829-01"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-400 mb-1 font-semibold uppercase">
-                Destination
-              </p>
-              <p className="text-lg font-bold text-gray-900">
-                {deliveryLocation}
-              </p>
-              <p className="text-xs text-brand-red font-medium mt-1">
-                Aviation District, Zone B
-              </p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Bottom Interactive Area */}
-        <div className="absolute bottom-[90px] md:bottom-8 w-full flex justify-center z-20 pointer-events-none">
-          <AnimatePresence mode="wait">
-            {phase === "DASHBOARD" && (
-              <motion.div
-                key="dashboard"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="bg-white rounded-[32px] md:rounded-[40px] px-6 md:px-8 py-5 md:py-6 shadow-2xl shadow-gray-300/60 flex flex-col md:flex-row items-center justify-between gap-6 border border-gray-100 w-[90%] max-w-[700px] pointer-events-auto"
-              >
-                <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
-                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-brand-red-light flex items-center justify-center shrink-0">
-                    <Package className="w-6 h-6 md:w-7 md:h-7 text-brand-red" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
-                      Receive a Package
-                    </h2>
-                    <p className="text-xs md:text-sm font-medium text-gray-500">
-                      Select a nearby smart box
-                    </p>
-                  </div>
-                </div>
-
-                <div className="w-full md:w-64 shrink-0">
-                  <div className="bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-center">
-                    <p className="text-xs text-gray-500 font-bold uppercase mb-0.5">Delivery To</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {deliveryLocation === "Smart Locker S-04" ? "Smart Locker S-04 (0.2km)" : 
-                       deliveryLocation === "District 1 Balcony" ? "District 1 Balcony (0.5km)" : 
-                       deliveryLocation === "Skyway Station A" ? "Skyway Station A (1.2km)" : deliveryLocation}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setPhase("REQUEST")}
-                  className="w-full md:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 px-6 md:py-4 md:px-8 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 shrink-0"
-                >
-                  Receive Here
-                </button>
-              </motion.div>
-            )}
-
-            {phase === "REQUEST" && (
-              <motion.div
-                key="request"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-[32px] md:rounded-[40px] px-6 md:px-8 py-5 md:py-6 shadow-2xl shadow-gray-300/60 flex flex-col gap-6 border border-gray-100 w-[90%] max-w-[600px] md:w-fit md:min-w-[500px] pointer-events-auto"
-              >
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-                    Confirm Reception
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={() => setPhase("DASHBOARD")}
-                    className="text-gray-400 hover:text-gray-700 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red rounded-md px-2 py-1"
-                  >
-                    Cancel
-                  </button>
-                </div>
-                <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center">
-                  <div className="w-full md:flex-1 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                    <p className="text-xs text-gray-400 font-semibold uppercase mb-1">
-                      Sender Location
-                    </p>
-                    <p className="text-sm md:text-base font-bold text-gray-900">
-                      142 SkyHub Station
-                    </p>
-                  </div>
-                  <div className="hidden md:block w-12 h-[2px] bg-gray-200 relative">
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 border-t-2 border-r-2 border-gray-300 rotate-45" />
-                  </div>
-                  <div className="w-full md:flex-1 bg-brand-red-light/30 p-4 rounded-2xl border border-brand-red/10">
-                    <p className="text-xs text-brand-red font-semibold uppercase mb-1">
-                      Your Locker
-                    </p>
-                    <p className="text-sm md:text-base font-bold text-gray-900">
-                      {deliveryLocation}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTrackingId(
-                      `#FL-${Math.floor(1000 + Math.random() * 9000)}-01`,
-                    );
-                    setPhase("TRACKING");
-                  }}
-                  className="w-full bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 md:py-4 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2 flex items-center justify-center gap-2"
-                >
-                  <Check className="w-5 h-5" />
-                  Confirm & Connect
-                </button>
-              </motion.div>
-            )}
-
-            {phase === "TRACKING" && (
-              <motion.div
-                key="tracking"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 50 }}
-                className="relative w-[90%] max-w-[600px] md:w-fit pointer-events-auto"
-              >
-                {/* Marker icon */}
-                <div className="absolute -top-[50px] right-8 w-12 h-12 bg-brand-red rounded-2xl flex items-center justify-center rotate-45 shadow-lg shadow-brand-red/30 translate-y-3 z-0 border-2 border-white">
-                  <div className="-rotate-45">
-                    <Navigation2
-                      className="w-5 h-5 text-white"
-                      fill="currentColor"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-[32px] md:rounded-[40px] px-6 md:px-8 py-5 md:py-6 shadow-2xl shadow-gray-300/60 flex flex-col md:flex-row items-center gap-6 md:gap-12 relative z-10 w-full md:min-w-[500px] border border-gray-100">
-                  <div className="flex flex-col w-full md:w-auto">
-                    <div className="flex justify-between md:flex-col">
-                      <h2 className="text-2xl md:text-[32px] font-bold text-gray-900 leading-tight">
-                        In Transit
-                      </h2>
-                      <h2
-                        aria-live="polite"
-                        className="text-2xl md:text-[32px] font-bold text-brand-red leading-tight md:mb-2 animate-pulse"
-                      >
-                        {formatEta(simulatedData.etaSeconds)}
-                      </h2>
-                    </div>
-                    <div className="flex items-center justify-between md:justify-start gap-6 mt-2 md:mt-1">
-                      <p
-                        className="text-xs md:text-sm font-medium text-gray-500"
-                        aria-live="polite"
-                      >
-                        Speed: {simulatedData.speed.toFixed(1)}km/h
-                        <br />
-                        Alt: {simulatedData.altitude.toFixed(1)}m
-                      </p>
-                      <div className="flex flex-col items-center bg-brand-red-light px-3 py-1.5 rounded-xl">
-                        <span className="text-[10px] font-bold text-brand-red tracking-widest mb-0.5">
-                          PHASE
-                        </span>
-                        <span className="text-brand-red font-bold text-xs md:text-sm">
-                          2/4
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-4 md:mt-5">
-                      <div className="h-2.5 flex-1 md:w-24 bg-gradient-to-r from-brand-red-light to-brand-red rounded-full overflow-hidden relative">
-                        <motion.div
-                          className="absolute inset-0 bg-white/30"
-                          animate={{ x: ["-100%", "100%"] }}
-                          transition={{
-                            repeat: Infinity,
-                            duration: 1.5,
-                            ease: "linear",
-                          }}
-                        />
-                      </div>
-                      <div className="h-2.5 w-12 bg-gray-100 rounded-full" />
-                    </div>
-                  </div>
-
-                  <div className="hidden md:block w-[1px] h-24 bg-gray-200" />
-
-                  <div className="w-full md:w-auto flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setPhase("DELIVERED")}
-                      className="w-full md:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-2xl py-3 md:py-4 px-6 font-bold text-base md:text-lg shadow-lg shadow-brand-red/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
-                    >
-                      Simulate Land
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {phase === "DELIVERED" && (
-              <motion.div
-                key="delivered"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-[32px] md:rounded-[40px] px-6 md:px-8 py-6 md:py-8 shadow-2xl shadow-green-600/10 flex flex-col gap-6 border border-green-100 w-[90%] max-w-[600px] md:min-w-[500px] items-center text-center relative overflow-hidden pointer-events-auto"
-              >
-                <div className="absolute inset-0 bg-green-50 z-0 pointer-events-none" />
-
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 rounded-full flex items-center justify-center relative z-10 shadow-lg shadow-green-200/50 md:mb-2 md:mt-2">
-                  <Check
-                    className="w-8 h-8 md:w-10 md:h-10 text-green-600"
-                    strokeWidth={3}
-                  />
-                </div>
-
-                <div className="relative z-10">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                    Package Arrived
-                  </h2>
-                  <p className="text-sm md:text-base text-gray-500 font-medium">
-                    Order {trackingId || "#FL-8829-01"} at {deliveryLocation} is
-                    ready to open.
-                  </p>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-3 md:gap-4 w-full relative z-10 mt-2">
-                  <button
-                    type="button"
-                    className="w-full md:flex-1 bg-white border-2 border-gray-200 text-gray-600 rounded-full py-3 md:py-4 font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
-                  >
-                    <QrCode className="w-5 h-5" />
-                    <span className="hidden md:inline">QR Code</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPhase("DASHBOARD")}
-                    className="w-full md:flex-[2] bg-green-600 text-white rounded-full py-3 md:py-4 font-bold text-base md:text-lg hover:bg-green-700 transition-colors shadow-lg shadow-green-600/30 flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
-                  >
-                    <Unlock className="w-5 h-5" />
-                    Unlock Now
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Right Sidebar / Mobile Drawer */}
-      <div
-        id="mobile-drawer"
-        className="fixed md:relative inset-x-0 bottom-[80px] md:bottom-0 translate-y-[120%] md:translate-y-0 transition-transform duration-300 w-full md:w-[350px] bg-white border-t md:border-t-0 md:border-l border-gray-200 p-6 md:p-8 flex flex-col gap-6 md:gap-10 shrink-0 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-sm overflow-y-auto max-h-[70vh] md:max-h-full rounded-t-[32px] md:rounded-none"
-      >
-        <button
-          type="button"
-          aria-label="Close sidebar"
-          className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto md:hidden mb-2 shrink-0 active:bg-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
-          onClick={() =>
-            document
-              .getElementById("mobile-drawer")
-              ?.classList.add("translate-y-[120%]")
-          }
-        >
-          <span className="sr-only">Close drawer</span>
-        </button>
-
-        {/* Hardware Status */}
-        {activeTab === "MAP" && (
-          <div>
-            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">
-              Hardware Status
-            </h3>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 shadow-sm">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">
-                  Battery
-                </p>
-                <p
-                  className="text-2xl font-bold text-green-500"
-                  aria-live="polite"
-                >
-                  {Math.floor(simulatedData.battery)}%
-                </p>
+          {/* Top Header */}
+          <div className="absolute top-0 w-full h-20 px-4 md:px-8 mt-4 md:mt-0 flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 z-10 pointer-events-none">
+            <div className="flex items-center gap-2 md:gap-3 ml-auto md:ml-4 pointer-events-auto">
+              <div className="hidden mt-4 md:flex px-3 py-1 rounded-full border border-green-500/30 bg-green-50 text-green-600 text-xs font-bold tracking-wider">
+                SYSTEM LIVE
               </div>
-              <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 shadow-sm">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">
-                  Altitude
-                </p>
-                <p
-                  className="text-2xl font-bold text-gray-900"
-                  aria-live="polite"
-                >
-                  {simulatedData.altitude.toFixed(1)}m
-                </p>
+              <div className="px-3 mt-4 md:px-4 py-1.5 rounded-full bg-white border border-gray-200 flex items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                D-742 Active
               </div>
-              <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 shadow-sm">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">
-                  Speed
-                </p>
-                <p
-                  className="text-2xl font-bold text-gray-900"
-                  aria-live="polite"
-                >
-                  {simulatedData.speed.toFixed(1)}km/h
-                </p>
-              </div>
-              <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 shadow-sm">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase">
-                  Payload
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {phase === "REQUEST" ? "0kg" : "2.1kg"}
-                </p>
+              <div className="hidden mt-4 md:flex px-4 py-1.5 rounded-full bg-white border border-gray-200 items-center gap-2 text-xs font-semibold text-gray-500 shadow-sm">
+                <Signal className="w-3.5 h-3.5 text-blue-500" />
+                98% Signal
               </div>
             </div>
           </div>
-        )}
 
-        {/* Flight History */}
-        {activeTab === "HISTORY" && (
-          <div>
-            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">
-              Flight History
-            </h3>
-            <div className="flex flex-col gap-3">
-              {flightHistory.map((flight) => (
-                <div
-                  key={flight.id}
-                  className="bg-gray-50 border border-gray-100 p-4 rounded-2xl shadow-sm flex flex-col"
+          {/* Floating Tracking UI */}
+          <div className="absolute left-6 right-6 md:left-8 bottom-[100px] md:bottom-8 md:w-[600px] pointer-events-auto z-10 flex flex-col gap-6">
+            
+            {/* Tracking Stats row */}
+            <div className="flex flex-row gap-4 mb-2">
+              <div className="bg-white/90 backdrop-blur-md border border-gray-100 rounded-2xl p-4 shadow-sm flex-1">
+                <p className="text-xs font-semibold text-gray-400 mb-1 uppercase">Altitude</p>
+                <p className="text-xl font-bold text-gray-900">{simulatedData.altitude.toFixed(1)}m</p>
+              </div>
+              <div className="bg-white/90 backdrop-blur-md border border-gray-100 rounded-2xl p-4 shadow-sm flex-1">
+                <p className="text-xs font-semibold text-gray-400 mb-1 uppercase">Speed</p>
+                <p className="text-xl font-bold text-gray-900">{simulatedData.speed.toFixed(1)}km/h</p>
+              </div>
+              <div className="bg-white/90 backdrop-blur-md border border-gray-100 rounded-2xl p-4 shadow-sm flex-1">
+                <p className="text-xs font-semibold text-gray-400 mb-1 uppercase">Battery</p>
+                <p className="text-xl font-bold text-green-500">{Math.floor(simulatedData.battery)}%</p>
+              </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {phase === "DASHBOARD" && (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="bg-white rounded-[32px] px-6 py-5 shadow-2xl shadow-gray-300/60 flex flex-col sm:flex-row items-center justify-between gap-6 border border-gray-100"
                 >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setExpandedHistory(
-                        expandedHistory === flight.id ? null : flight.id,
-                      )
-                    }
-                    className="flex items-center justify-between w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red rounded-lg focus-visible:ring-offset-2"
-                    aria-expanded={expandedHistory === flight.id}
-                  >
+                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className="w-12 h-12 rounded-full bg-brand-red-light flex items-center justify-center shrink-0">
+                      <Package className="w-6 h-6 text-brand-red" />
+                    </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-900">
-                        {flight.id}
-                      </p>
-                      <p className="text-xs text-gray-500 font-medium mt-1">
-                        {flight.date}
+                      <h2 className="text-xl font-bold text-gray-900 leading-tight">
+                        Receive Package
+                      </h2>
+                      <p className="text-xs font-medium text-gray-500">
+                        {deliveryLocation.includes(',') ? `Drop coordinates: ${deliveryLocation}` : deliveryLocation}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
-                        {flight.status}
-                      </div>
-                      <ChevronDown
-                        className={`w-4 h-4 text-gray-400 transition-transform ${expandedHistory === flight.id ? "rotate-180" : ""}`}
-                      />
-                    </div>
-                  </button>
-
-                  <AnimatePresence>
-                    {expandedHistory === flight.id && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pt-4 mt-2 border-t border-gray-200 text-xs text-gray-600 flex flex-col gap-2">
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-400 uppercase">
-                              Origin
-                            </span>{" "}
-                            <span className="font-medium text-gray-900">
-                              {flight.origin}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-400 uppercase">
-                              Destination
-                            </span>{" "}
-                            <span className="font-medium text-gray-900">
-                              {flight.destination}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-400 uppercase">
-                              Weight
-                            </span>{" "}
-                            <span className="font-medium text-gray-900">
-                              {flight.weight}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-400 uppercase">
-                              Duration
-                            </span>{" "}
-                            <span className="font-medium text-gray-900">
-                              {flight.duration}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Locker Live Feed */}
-        {activeTab === "MAP" &&
-          (phase === "TRACKING" || phase === "DELIVERED") && (
-            <div>
-              <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">
-                Locker Live Feed
-              </h3>
-
-              <div className="bg-gray-100 rounded-2xl aspect-[4/3] border border-gray-200 relative overflow-hidden flex items-center justify-center shadow-inner">
-                <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/80 backdrop-blur px-2 py-1 rounded-md">
-                  <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
-                  <span className="text-[10px] font-bold text-gray-800 tracking-wider">
-                    REC LOCKER_S04
-                  </span>
-                </div>
-
-                <Eye className="w-16 h-16 text-gray-300" />
-
-                {phase === "DELIVERED" && (
-                  <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center backdrop-blur-[1px]">
-                    <p className="bg-white text-green-600 font-bold px-4 py-2 rounded-full shadow-lg">
-                      Ready to Open
-                    </p>
                   </div>
-                )}
-              </div>
 
-              <p className="text-xs text-gray-500 font-medium mt-4 leading-relaxed">
-                {phase === "DELIVERED"
-                  ? "Package securely stored. Waiting for user unlock."
-                  : "Secure compartment ready for docking. Smart release sensor engaged."}
-              </p>
-            </div>
-          )}
-
-        {/* Profile */}
-        {activeTab === "PROFILE" && (
-          <div>
-            <h3 className="text-xs font-bold text-gray-400 tracking-wider mb-6 uppercase">
-              Your Profile
-            </h3>
-
-            <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 shadow-sm mb-6 flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-md overflow-hidden">
-                <span className="text-3xl font-bold text-gray-600 uppercase">
-                  {user.name
-                    ? user.name.charAt(0)
-                    : user.email?.charAt(0) || "U"}
-                </span>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-              <p className="text-sm font-medium text-gray-500 mt-1">
-                {user.email}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2 relative">
-                <label className="text-xs font-bold text-gray-500 uppercase flex justify-between">
-                  Preferred Delivery Location
-                  {draftLocation !== deliveryLocation && (
-                    <span className="text-[10px] text-brand-red font-bold uppercase tracking-wider bg-brand-red/10 px-2 py-0.5 rounded-full">
-                      Unsaved
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <select
-                    value={draftLocation}
-                    onChange={(e) => setDraftLocation(e.target.value)}
-                    className={`w-full appearance-none bg-white border ${draftLocation !== deliveryLocation ? "border-brand-red ring-1 ring-brand-red/20" : "border-gray-200"} text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors`}
-                  >
-                    <option value="Smart Locker S-04">Smart Locker S-04</option>
-                    <option value="District 1 Balcony">
-                      District 1 Balcony
-                    </option>
-                    <option value="Central Hub S-01">Central Hub S-01</option>
-                    <option value="Skyway Station A">Skyway Station A</option>
-                  </select>
-                  <ChevronDown
-                    className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors pointer-events-none ${draftLocation !== deliveryLocation ? "text-brand-red" : "text-gray-400"}`}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 relative">
-                <label className="text-xs font-bold text-gray-500 uppercase flex justify-between">
-                  Contact Preferences
-                  {draftPrefs !== contactPrefs && (
-                    <span className="text-[10px] text-brand-red font-bold uppercase tracking-wider bg-brand-red/10 px-2 py-0.5 rounded-full">
-                      Unsaved
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <select
-                    value={draftPrefs}
-                    onChange={(e) => setDraftPrefs(e.target.value)}
-                    className={`w-full appearance-none bg-white border ${draftPrefs !== contactPrefs ? "border-brand-red ring-1 ring-brand-red/20" : "border-gray-200"} text-gray-900 font-semibold rounded-2xl p-4 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-colors`}
-                  >
-                    <option value="SMS & Push">SMS & Push Notification</option>
-                    <option value="Push Only">Push Notification Only</option>
-                    <option value="Email Only">Email Only</option>
-                    <option value="Do Not Disturb">Do Not Disturb</option>
-                  </select>
-                  <ChevronDown
-                    className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors pointer-events-none ${draftPrefs !== contactPrefs ? "text-brand-red" : "text-gray-400"}`}
-                  />
-                </div>
-              </div>
-
-              {isProfileDirty && (
-                <div className="flex items-center gap-3 mt-2">
                   <button
-                    onClick={handleCancelProfile}
-                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
+                    onClick={() => setPhase("REQUEST")}
+                    className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 px-6 font-bold shadow-lg shadow-brand-red/30 whitespace-nowrap focus:outline-none"
                   >
-                    Cancel
+                    Receive Here
                   </button>
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={isSavingProfile}
-                    className="flex-[2] py-3 px-4 rounded-xl font-bold text-sm bg-brand-red text-white hover:bg-brand-red-dark transition-colors shadow-lg shadow-brand-red/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isSavingProfile ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </button>
-                </div>
+                </motion.div>
               )}
 
-              <button className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red mt-2">
-                <span className="font-semibold text-gray-700">
-                  Account Settings
-                </span>
-                <ChevronDown className="w-5 h-5 text-gray-400 -rotate-90" />
-              </button>
-              <button className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red">
-                <span className="font-semibold text-gray-700">
-                  Payment Methods
-                </span>
-                <ChevronDown className="w-5 h-5 text-gray-400 -rotate-90" />
-              </button>
-            </div>
+              {phase === "REQUEST" && (
+                <motion.div
+                  key="request"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-white rounded-[32px] px-6 py-5 shadow-2xl shadow-gray-300/60 flex flex-col gap-6 border border-gray-100"
+                >
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-gray-900">Confirm Reception</h2>
+                    <button onClick={() => setPhase("DASHBOARD")} className="text-gray-400 hover:text-gray-700 text-sm font-semibold">Cancel</button>
+                  </div>
+                  <div className="flex flex-row gap-4 items-center">
+                    <div className="flex-1 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] text-gray-400 font-semibold uppercase mb-1">From</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">SkyHub Station</p>
+                    </div>
+                    <div className="w-8 h-[2px] bg-gray-200 relative">
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 border-t-2 border-r-2 border-gray-300 rotate-45" />
+                    </div>
+                    <div className="flex-1 bg-brand-red-light/30 p-4 rounded-2xl border border-brand-red/10">
+                      <p className="text-[10px] text-brand-red font-semibold uppercase mb-1">To</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{deliveryLocation.includes(',') ? 'Custom coordinates' : deliveryLocation}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setTrackingId(`#FL-${Math.floor(1000 + Math.random() * 9000)}-01`); setPhase("TRACKING"); }}
+                    className="w-full bg-brand-red text-white hover:bg-brand-red-dark transition-colors rounded-full py-3 font-bold shadow-lg shadow-brand-red/30 flex items-center justify-center gap-2"
+                  >
+                    <Check className="w-5 h-5" /> Confirm & Connect
+                  </button>
+                </motion.div>
+              )}
 
-            <button
-              onClick={onLogout}
-              className="mt-8 w-full flex items-center justify-center gap-2 p-4 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
-            >
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </button>
-          </div>
-        )}
+              {phase === "TRACKING" && (
+                <motion.div
+                  key="tracking"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  className="bg-white rounded-[32px] px-6 py-5 shadow-2xl shadow-gray-300/60 flex flex-col sm:flex-row items-center gap-6 relative border border-gray-100"
+                >
+                  <div className="flex flex-col w-full sm:w-auto flex-1">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-2xl font-bold text-gray-900">In Transit</h2>
+                      <h2 className="text-2xl font-bold text-brand-red animate-pulse">{formatEta(simulatedData.etaSeconds)}</h2>
+                    </div>
+                    <p className="text-xs font-medium text-gray-500 mt-1">To {deliveryLocation}</p>
+                  </div>
 
-        <div className="mt-auto">
-          <div className="bg-brand-red-light/30 border border-brand-red/10 rounded-2xl p-5">
-            <p className="text-xs text-gray-600 mb-4 font-medium">
-              Need assistance? Quick connect with flight command center.
-            </p>
-            <button
-              type="button"
-              className="w-full py-3.5 rounded-xl bg-brand-red hover:bg-brand-red-dark transition-colors text-white font-bold text-sm shadow-md shadow-brand-red/20 flex justify-center items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-2"
-            >
-              <HeadphonesIcon className="w-4 h-4" />
-              Call Operator
-            </button>
+                  <button
+                    onClick={() => setPhase("DELIVERED")}
+                    className="w-full sm:w-auto bg-brand-red text-white hover:bg-brand-red-dark rounded-2xl py-3 px-6 font-bold shadow-lg shadow-brand-red/30"
+                  >
+                    Sim Land
+                  </button>
+                </motion.div>
+              )}
+
+              {phase === "DELIVERED" && (
+                <motion.div
+                  key="delivered"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-white rounded-[32px] px-6 py-6 shadow-2xl shadow-green-600/10 flex flex-col gap-4 border border-green-100 items-center text-center relative overflow-hidden"
+                >
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-1">
+                    <Check className="w-8 h-8 text-green-600" strokeWidth={3} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Package Arrived</h2>
+                    <p className="text-sm text-gray-500 font-medium">Order {trackingId} is ready at {deliveryLocation}</p>
+                  </div>
+                  <div className="flex gap-3 w-full mt-2">
+                    <button onClick={() => setPhase("DASHBOARD")} className="flex-1 bg-white border border-gray-200 text-gray-600 rounded-full py-3 font-bold flex items-center justify-center gap-2">
+                      <QrCode className="w-5 h-5" /> QR
+                    </button>
+                    <button onClick={() => { setPhase("DASHBOARD"); setActiveTab("LOCKER"); }} className="flex-[2] bg-green-600 text-white rounded-full py-3 font-bold hover:bg-green-700 shadow-lg flex items-center justify-center gap-2">
+                      <Unlock className="w-5 h-5" /> Unlock
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+
+      </main>
     </div>
   );
 }

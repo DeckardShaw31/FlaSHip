@@ -134,7 +134,27 @@ function FlightPathOverlay({ phase, etaSeconds, speed, destination }: { phase?: 
         opacity={0.8} 
       />
       <Marker position={currentPos} icon={droneIcon}>
-        <Popup>Flight in transit</Popup>
+        <Popup className="custom-popup">
+          <div className="p-1 min-w-[140px]">
+            <h4 className="font-bold text-gray-900 text-sm mb-2 border-b border-gray-100 pb-1">Drone Status</h4>
+            <div className="flex flex-col gap-1.5 text-xs">
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Speed:</span>
+                <span className="font-semibold text-gray-900">{speed?.toFixed(1) || '0.0'} km/h</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">ETA:</span>
+                <span className="font-bold text-brand-red">{formattedEta}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">To:</span>
+                <span className="font-semibold text-gray-900 truncate max-w-[80px]" title={`${destination[0].toFixed(4)}, ${destination[1].toFixed(4)}`}>
+                  {destination[0].toFixed(4)}, {destination[1].toFixed(4)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </Popup>
       </Marker>
       
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[400] pointer-events-auto">

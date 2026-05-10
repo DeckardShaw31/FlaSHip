@@ -157,7 +157,7 @@ function FlightPathOverlay({ phase, etaSeconds, speed, destination }: { phase?: 
         </Popup>
       </Marker>
       
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[400] pointer-events-auto">
+      <div className="absolute top-6 right-6 z-[400] pointer-events-auto">
         <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-lg border border-gray-100 flex items-center gap-3">
           <div className="flex bg-brand-red-light p-1.5 rounded-full">
             <Clock className="w-4 h-4 text-brand-red" />
@@ -181,6 +181,15 @@ interface InteractiveMapProps {
   onSelectLocation?: (location: string) => void;
 }
 
+function LocationPicker({ onSelectCoordinate }: { onSelectCoordinate: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onSelectCoordinate(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
 export const AVAILABLE_LOCATIONS = [
   { name: "Smart Locker S-04", coords: [10.7820, 106.7050] as [number, number] },
   { name: "District 1 Balcony", coords: [10.7800, 106.7020] as [number, number] },
@@ -195,9 +204,25 @@ export const AVAILABLE_LOCATIONS = [
 ];
 
 export function InteractiveMap({ children, phase, etaSeconds, speed, deliveryLocation, onSelectLocation }: InteractiveMapProps) {
+  // Use a custom state for coordinate if the deliveryLocation is a coordinate (e.g., "Lat, Lng")
+  const [customCoords, setCustomCoords] = useState<[number, number] | null>(null);
+
+  useEffect(() => {
+    if (deliveryLocation?.includes(',')) {
+      const parts = deliveryLocation.split(',');
+      const lat = parseFloat(parts[0]);
+      const lng = parseFloat(parts[1]);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setCustomCoords([lat, lng]);
+      }
+    } else {
+      setCustomCoords(null);
+    }
+  }, [deliveryLocation]);
+
   // Find coordinates based on selected name
   const selectedLoc = AVAILABLE_LOCATIONS.find(l => l.name === deliveryLocation) || AVAILABLE_LOCATIONS[0];
-  let activeDestination = selectedLoc.coords;
+  let activeDestination = customCoords || selectedLoc.coords;
 
   return (
     <div className="absolute inset-0 w-full h-full -z-10 bg-[#F3F4F6]">
@@ -208,12 +233,26 @@ export function InteractiveMap({ children, phase, etaSeconds, speed, deliveryLoc
         zoomControl={false}
         className="w-full h-full z-0"
       >
+        <LocationPicker 
+          onSelectCoordinate={(lat, lng) => {
+            if (phase === "DASHBOARD" || phase === "REQUEST") {
+               onSelectLocation?.(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+            }
+          }} 
+        />
         <TileLayer
           attribution='&amp;copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <MapControls />
         
+        {/* Custom Clicks Drop Point Marker */}
+        {customCoords && phase !== "TRACKING" && phase !== "DELIVERED" && (
+          <Marker position={customCoords} icon={pingIcon}>
+            <Popup>Custom Delivery Location</Popup>
+          </Marker>
+        )}
+
         {/* Drone Hub */}
         <Marker position={HCM_CENTER}>
           <Popup>142 SkyHub Station</Popup>
